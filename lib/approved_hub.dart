@@ -565,12 +565,12 @@ class _HubHomeState extends State<HubHome> {
         centerTitle: true,
       ),
       body: LayoutBuilder(builder: (context, cons) {
-        final cols = (cons.maxWidth / 320).floor().clamp(1, 4);
+        final cols = (cons.maxWidth / 170).floor().clamp(2, 5);
         final delegate = SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: cols,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 3.0,
+          childAspectRatio: 0.80,
         );
         final featured = group == null && hub.games.length > 1 ? hub.games[weekIndex(DateTime.now()) % hub.games.length] : null;
         final sisters = group == null && (kIsWeb || defaultTargetPlatform == TargetPlatform.android)
@@ -708,65 +708,53 @@ class _HubHomeState extends State<HubHome> {
   }
 
   Widget _tile(BuildContext context, String id, List<String> title, List<String> tagline, Color color, IconData icon,
-      VoidCallback onTap,
-      {required IconData trailing}) {
+      VoidCallback onTap, {required IconData trailing}) {
     final hub = widget.hub, lang = widget.lang;
-    final scheme = Theme.of(context).colorScheme;
     final busy = _opening == id;
     return Semantics(
       button: true,
       label: hub.localized(title, lang),
       child: Card(
         clipBehavior: Clip.antiAlias,
-        color: Color.alphaBlend(color.withValues(alpha: 0.10), scheme.surfaceContainerLowest),
-        elevation: 1.5,
-        shadowColor: color.withValues(alpha: 0.35),
+        color: Color.alphaBlend(color.withValues(alpha: 0.20), Theme.of(context).colorScheme.surface),
+        elevation: 4,
+        shadowColor: color.withValues(alpha: 0.30),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(children: [
-              Stack(alignment: Alignment.center, children: [
+            padding: const EdgeInsets.all(10),
+            child: Column(children: [
+              Expanded(child: Center(child: Stack(alignment: Alignment.center, children: [
                 hub.coverFor(id) != null
-                    ? CoverArt(cover: hub.coverFor(id)!, color: color, size: 64, radius: 16)
+                    ? CoverArt(cover: hub.coverFor(id)!, color: color, size: 82, radius: 18)
                     : Container(
-                        width: 64,
-                        height: 64,
+                        width: 82, height: 82,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [Color.lerp(color, Colors.white, 0.15)!, Color.lerp(color, Colors.black, 0.25)!]),
+                          borderRadius: BorderRadius.circular(18),
+                          gradient: LinearGradient(colors: [color, Color.lerp(color, Colors.black, 0.35)!]),
                         ),
-                        child: Icon(icon, color: Colors.white, size: 32),
-                      ),
-                if (busy)
-                  const SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white)),
-              ]),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(hub.localized(title, lang),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text(tagline.length == 1 ? tagline.first : hub.localized(tagline, lang),
-                        maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
+                        child: Icon(icon, color: Colors.white, size: 44)),
+                if (busy) const CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+              ]))),
+              Text(hub.localized(title, lang), maxLines: 2, textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [color, Color.lerp(color, Colors.blueAccent, 0.30)!]),
+                  borderRadius: BorderRadius.circular(20)),
+                child: Icon(trailing, color: Colors.white, size: 22),
               ),
-              Icon(trailing),
             ]),
           ),
         ),
       ),
     );
   }
+
 }
 
 /// One game inside the hub: the game's own app shell. Its home screen shows
