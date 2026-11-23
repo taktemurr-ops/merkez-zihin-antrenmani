@@ -18,43 +18,43 @@ dependencies:
   oyun_gunluk_beyin_egzersizi_programi:
     git:
       url: https://github.com/taktemurr-ops/oyun-gunluk-beyin-egzersizi-programi
-      ref: 43238d09595c90ffb3ce914ceea9b8e019f3ef73
+      ref: c78e5fb09c7429d97bd9694c8ede9369f6e077ee
   oyun_hafiza_dizisi:
     git:
       url: https://github.com/taktemurr-ops/oyun-hafiza-dizisi
-      ref: f8ac0447c6abf49305c9c9464d37b8fc8adbf1a1
+      ref: eb9a0e1250c0f4bff48a86a33a234b97b4698b9c
   oyun_gorsel_hafiza_izgarasi:
     git:
       url: https://github.com/taktemurr-ops/oyun-gorsel-hafiza-izgarasi
-      ref: bf038723af46ee8a0203c456b9b6b966487243bc
+      ref: a842a49368dfb07714d8739843989dc228cd7880
   oyun_n_geri:
     git:
       url: https://github.com/taktemurr-ops/oyun-n-geri
-      ref: 3a7e53c876f66d97bfc1710fe4745b4ba3e00129
+      ref: ea3ed3547c80788b07584e54d5a0690cc799ab95
   oyun_stroop_testi:
     git:
       url: https://github.com/taktemurr-ops/oyun-stroop-testi
-      ref: 8793e53e13a9f92b03d87ed20c545234dbca1dfe
+      ref: 455e18b229ef2cc1e4d08372878619d253245406
   oyun_schulte_tablosu:
     git:
       url: https://github.com/taktemurr-ops/oyun-schulte-tablosu
-      ref: d82cb728b6a714a291408a343c241ad111b46faa
+      ref: b0038996188ee4f5afde5143dce5d59a09857b68
   oyun_tepki_ve_odak:
     git:
       url: https://github.com/taktemurr-ops/oyun-tepki-ve-odak
-      ref: a3641e0c26a590a0572ac3f13dabe9976615940d
+      ref: 4cf41925baf63ec34becca7a64e02f8829241d56
   oyun_hizli_hesap:
     git:
       url: https://github.com/taktemurr-ops/oyun-hizli-hesap
-      ref: bc664ee0485f61925df5150f212f8cd42cb20f30
+      ref: a6a0f648fd3742d7aa8a8f8a4560da31f3fb45e4
   oyun_oruntu_tamamlama:
     git:
       url: https://github.com/taktemurr-ops/oyun-oruntu-tamamlama
-      ref: 41a709009363fdaf53af09deb42f0890f074cee0
+      ref: 6bec5b402820ad1fcd516d7bee0654f0d387e9fa
   oyun_uzamsal_dondurme:
     git:
       url: https://github.com/taktemurr-ops/oyun-uzamsal-dondurme
-      ref: 52af38985cf799bc226c59ab2039b6fd7799d022
+      ref: f6d796808747b58019374fb7d4b1ea189a8bc436
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^2.6.1
@@ -72,7 +72,7 @@ dependency_overrides:
   zihin_motoru:
     git:
       url: https://github.com/taktemurr-ops/zihin-motoru
-      ref: 7419ad90a7528b1d753de35cfd5b0fb3032e01d3
+      ref: 6e50f293762aeba9a7c2d3fd720b641b41b4b72b
 
 dev_dependencies:
   flutter_test:
