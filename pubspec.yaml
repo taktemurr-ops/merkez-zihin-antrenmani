@@ -34,7 +34,7 @@ dependencies:
   oyun_yuz_ve_isim:
     git:
       url: https://github.com/taktemurr-ops/oyun-yuz-ve-isim
-      ref: 74a621875cb62b7c79d235376e2c64b9db52c0c2
+      ref: a3f820fc9762bd62a75c3f8d235af4c6008a5699
   oyun_stroop_testi:
     git:
       url: https://github.com/taktemurr-ops/oyun-stroop-testi
@@ -54,7 +54,7 @@ dependencies:
   oyun_cift_gorev:
     git:
       url: https://github.com/taktemurr-ops/oyun-cift-gorev
-      ref: cbf34fcc2540d45117e407ff7e4ce7b4c105cac8
+      ref: fa01059e504e2307cee99d66024f3aff2e3a6c10
   oyun_oruntu_tamamlama:
     git:
       url: https://github.com/taktemurr-ops/oyun-oruntu-tamamlama
@@ -80,7 +80,7 @@ dependency_overrides:
   zihin_motoru:
     git:
       url: https://github.com/taktemurr-ops/zihin-motoru
-      ref: b1fd9cdfe264bfd4cf91677ec7b32826f7748bb9
+      ref: 41e139d41a39b2bdc9365fddb6b78239959b414b
 
 dev_dependencies:
   flutter_test:
