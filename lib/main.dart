@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:oyun_cift_gorev/oyun_cift_gorev.dart';
 import 'package:oyun_gorsel_hafiza_izgarasi/oyun_gorsel_hafiza_izgarasi.dart';
 import 'package:oyun_gunluk_beyin_egzersizi_programi/oyun_gunluk_beyin_egzersizi_programi.dart';
 import 'package:oyun_hafiza_dizisi/oyun_hafiza_dizisi.dart';
@@ -9,6 +10,7 @@ import 'package:oyun_schulte_tablosu/oyun_schulte_tablosu.dart';
 import 'package:oyun_stroop_testi/oyun_stroop_testi.dart';
 import 'package:oyun_tepki_ve_odak/oyun_tepki_ve_odak.dart';
 import 'package:oyun_uzamsal_dondurme/oyun_uzamsal_dondurme.dart';
+import 'package:oyun_yuz_ve_isim/oyun_yuz_ve_isim.dart';
 import 'package:studio_core/app/hub.dart';
 
 /// Zihin Antrenmanı: hafıza, dikkat ve hız, mantık ve uzam egzersizlerini
@@ -92,15 +94,18 @@ final hubConfig = HubConfig(
     hafizaDizisiConfig,
     gorselHafizaConfig,
     nGeriConfig,
+    yuzIsimConfig,
     renkKelimeConfig,
     sayiTablosuConfig,
     tepkiConfig,
     hizliHesapConfig,
+    ciftGorevConfig,
     oruntuConfig,
     dondurmeConfig,
   ],
   starters: ['oyun-gunluk-beyin-egzersizi-programi', 'oyun-hafiza-dizisi', 'oyun-stroop-testi'],
   covers: const {
+    'oyun-cift-gorev': GameCover('dualtask'),
     'oyun-gorsel-hafiza-izgarasi': GameCover('memgrid'),
     'oyun-gunluk-beyin-egzersizi-programi': GameCover('daily', v: 2),
     'oyun-hafiza-dizisi': GameCover('pads'),
@@ -111,6 +116,7 @@ final hubConfig = HubConfig(
     'oyun-stroop-testi': GameCover('inkword'),
     'oyun-tepki-ve-odak': GameCover('reflex'),
     'oyun-uzamsal-dondurme': GameCover('rotate', v: 1),
+    'oyun-yuz-ve-isim': GameCover('facename'),
   },
   defaultCover: const GameCover('pads', v: 1),
   sections: [
@@ -187,7 +193,7 @@ final hubConfig = HubConfig(
           'Trí nhớ',
           'Memorya',
         ],
-        ids: ['oyun-hafiza-dizisi', 'oyun-gorsel-hafiza-izgarasi', 'oyun-n-geri']),
+        ids: ['oyun-hafiza-dizisi', 'oyun-gorsel-hafiza-izgarasi', 'oyun-n-geri', 'oyun-yuz-ve-isim']),
     HubSection(
         title: [
           'Dikkat ve hız',
@@ -224,7 +230,7 @@ final hubConfig = HubConfig(
           'Chú ý và tốc độ',
           'Atensyon at bilis',
         ],
-        ids: ['oyun-stroop-testi', 'oyun-schulte-tablosu', 'oyun-tepki-ve-odak', 'oyun-hizli-hesap']),
+        ids: ['oyun-stroop-testi', 'oyun-schulte-tablosu', 'oyun-tepki-ve-odak', 'oyun-hizli-hesap', 'oyun-cift-gorev']),
     HubSection(
         title: [
           'Mantık ve uzam',

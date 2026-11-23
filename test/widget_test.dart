@@ -9,10 +9,12 @@ void main() {
       'oyun-hafiza-dizisi',
       'oyun-gorsel-hafiza-izgarasi',
       'oyun-n-geri',
+      'oyun-yuz-ve-isim',
       'oyun-stroop-testi',
       'oyun-schulte-tablosu',
       'oyun-tepki-ve-odak',
       'oyun-hizli-hesap',
+      'oyun-cift-gorev',
       'oyun-oruntu-tamamlama',
       'oyun-uzamsal-dondurme',
     ]);

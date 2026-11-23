@@ -1,8 +1,8 @@
-Treino Mental reúne 10 exercícios mentais curtos num app com design próprio: memória, atenção e velocidade, lógica e espaço. Cada exercício tem progresso, missões e conquistas próprios; o Plano Mental Diário traz três exercícios diferentes por dia. Os exercícios são para diversão e prática, sem alegações médicas.
+Treino Mental reúne 12 exercícios mentais curtos num app com design próprio: memória, atenção e velocidade, lógica e espaço. Cada exercício tem progresso, missões e conquistas próprios; o Plano Mental Diário traz três exercícios diferentes por dia. Os exercícios são para diversão e prática, sem alegações médicas.
 
 • Todo dia: Plano Mental Diário
-• Memória: Sequência de Cores, Memória Visual, N-Atrás
-• Atenção e velocidade: Cor ou Palavra, Tabela de Números, Reflexo e Foco, Cálculo Rápido
+• Memória: Sequência de Cores, Memória Visual, N-Atrás, Rostos e Nomes
+• Atenção e velocidade: Cor ou Palavra, Tabela de Números, Reflexo e Foco, Cálculo Rápido, Tarefa Dupla
 • Lógica e espaço: Complete o Padrão, Rotação Espacial
 
 Destaques

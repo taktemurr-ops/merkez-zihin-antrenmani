@@ -1,8 +1,8 @@
-Entraînement Cérébral réunit 10 courts exercices cérébraux dans une app au design original : mémoire, attention et vitesse, logique et espace. Chaque exercice garde sa progression, ses missions et ses succès ; le Programme Cérébral du Jour propose trois exercices différents chaque jour. Ils sont faits pour le plaisir et l’entraînement, sans prétention médicale.
+Entraînement Cérébral réunit 12 courts exercices cérébraux dans une app au design original : mémoire, attention et vitesse, logique et espace. Chaque exercice garde sa progression, ses missions et ses succès ; le Programme Cérébral du Jour propose trois exercices différents chaque jour. Ils sont faits pour le plaisir et l’entraînement, sans prétention médicale.
 
 • Chaque jour: Programme Cérébral du Jour
-• Mémoire: Suite de Couleurs, Mémoire Visuelle, N-Back
-• Attention et vitesse: Couleur ou Mot, Table des Nombres, Réflexe et Concentration, Calcul Rapide
+• Mémoire: Suite de Couleurs, Mémoire Visuelle, N-Back, Visages et Noms
+• Attention et vitesse: Couleur ou Mot, Table des Nombres, Réflexe et Concentration, Calcul Rapide, Double Tâche
 • Logique et espace: Suite Logique, Rotation Spatiale
 
 Points forts

@@ -13,7 +13,7 @@ dependencies:
   studio_core:
     git:
       url: https://github.com/taktemurr-ops/studio-core
-      ref: 921df6392b2121ffd438a286673ef9f10c988273
+      ref: 05acd1e648dcb04c962281272f3fb806fc9ccc99
   # Merkezdeki oyunlar (her biri kendi deposunda)
   oyun_gunluk_beyin_egzersizi_programi:
     git:
@@ -31,6 +31,10 @@ dependencies:
     git:
       url: https://github.com/taktemurr-ops/oyun-n-geri
       ref: ea3ed3547c80788b07584e54d5a0690cc799ab95
+  oyun_yuz_ve_isim:
+    git:
+      url: https://github.com/taktemurr-ops/oyun-yuz-ve-isim
+      ref: 74a621875cb62b7c79d235376e2c64b9db52c0c2
   oyun_stroop_testi:
     git:
       url: https://github.com/taktemurr-ops/oyun-stroop-testi
@@ -47,6 +51,10 @@ dependencies:
     git:
       url: https://github.com/taktemurr-ops/oyun-hizli-hesap
       ref: a6a0f648fd3742d7aa8a8f8a4560da31f3fb45e4
+  oyun_cift_gorev:
+    git:
+      url: https://github.com/taktemurr-ops/oyun-cift-gorev
+      ref: cbf34fcc2540d45117e407ff7e4ce7b4c105cac8
   oyun_oruntu_tamamlama:
     git:
       url: https://github.com/taktemurr-ops/oyun-oruntu-tamamlama
@@ -68,11 +76,11 @@ dependency_overrides:
   studio_core:
     git:
       url: https://github.com/taktemurr-ops/studio-core
-      ref: 921df6392b2121ffd438a286673ef9f10c988273
+      ref: 05acd1e648dcb04c962281272f3fb806fc9ccc99
   zihin_motoru:
     git:
       url: https://github.com/taktemurr-ops/zihin-motoru
-      ref: 6e50f293762aeba9a7c2d3fd720b641b41b4b72b
+      ref: b1fd9cdfe264bfd4cf91677ec7b32826f7748bb9
 
 dev_dependencies:
   flutter_test:

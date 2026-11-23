@@ -1,8 +1,8 @@
-Entrenamiento Mental reúne 10 ejercicios mentales breves en una app con diseño propio: memoria, atención y velocidad, lógica y espacio. Cada ejercicio guarda su progreso, misiones y logros; el Plan Mental Diario ofrece tres ejercicios distintos cada día. Son para divertirse y practicar; no hacen afirmaciones médicas.
+Entrenamiento Mental reúne 12 ejercicios mentales breves en una app con diseño propio: memoria, atención y velocidad, lógica y espacio. Cada ejercicio guarda su progreso, misiones y logros; el Plan Mental Diario ofrece tres ejercicios distintos cada día. Son para divertirse y practicar; no hacen afirmaciones médicas.
 
 • Cada día: Plan Mental Diario
-• Memoria: Secuencia de Colores, Memoria Visual, N-Atrás
-• Atención y velocidad: Color o Palabra, Tabla de Números, Reflejos y Enfoque, Cálculo Rápido
+• Memoria: Secuencia de Colores, Memoria Visual, N-Atrás, Caras y Nombres
+• Atención y velocidad: Color o Palabra, Tabla de Números, Reflejos y Enfoque, Cálculo Rápido, Doble Tarea
 • Lógica y espacio: Completa el Patrón, Rotación Espacial
 
 Lo más destacado

@@ -1,8 +1,8 @@
-Trénink mysli spojuje 10 krátkých cvičení mysli v jedné aplikaci s vlastním designem: paměť, pozornost a rychlost, logika a prostor. Každé cvičení má vlastní postup, mise a úspěchy; Denní plán mysli nabízí každý den tři jiná cvičení. Cvičení jsou pro zábavu a trénink, bez zdravotních tvrzení.
+Trénink mysli spojuje 12 krátkých cvičení mysli v jedné aplikaci s vlastním designem: paměť, pozornost a rychlost, logika a prostor. Každé cvičení má vlastní postup, mise a úspěchy; Denní plán mysli nabízí každý den tři jiná cvičení. Cvičení jsou pro zábavu a trénink, bez zdravotních tvrzení.
 
 • Každý den: Denní plán mysli
-• Paměť: Barevná řada, Vizuální paměť, N-zpět
-• Pozornost a rychlost: Barva, nebo slovo, Tabulka čísel, Reakce a soustředění, Rychlé počty
+• Paměť: Barevná řada, Vizuální paměť, N-zpět, Tváře a jména
+• Pozornost a rychlost: Barva, nebo slovo, Tabulka čísel, Reakce a soustředění, Rychlé počty, Dvojí úkol
 • Logika a prostor: Doplň vzor, Prostorová rotace
 
 Hlavní přednosti
