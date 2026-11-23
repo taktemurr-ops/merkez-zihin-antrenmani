@@ -1,34 +1,34 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:studio_core/app/package:flutter/foundation.dart';
-import 'package:studio_core/app/package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
-import 'package:studio_core/app/package:flutter/services.dart';
-import 'package:studio_core/app/package:flutter_localizations/flutter_localizations.dart';
-import 'package:studio_core/app/package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:studio_core/app/package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import 'covers.dart';
-export 'covers.dart' show GameCover, CoverArt;
+import 'package:studio_core/app/covers.dart';
+export 'package:studio_core/app/covers.dart' show GameCover, CoverArt;
 import 'package:studio_core/core/game_session.dart';
 import 'package:studio_core/core/monetization.dart';
 import 'package:studio_core/core/save_data.dart';
 import 'package:studio_core/core/save_store.dart';
 import 'package:studio_core/core/strings.dart';
 import 'package:studio_core/core/telemetry.dart';
-import 'adaptive.dart';
-import 'app_state.dart';
-import 'bootstrap.dart';
-import 'game_api.dart';
+import 'package:studio_core/app/adaptive.dart';
+import 'package:studio_core/app/app_state.dart';
+import 'package:studio_core/app/bootstrap.dart';
+import 'package:studio_core/app/game_api.dart';
 import 'package:studio_core/app/services/ads.dart';
 import 'package:studio_core/app/services/audio.dart';
 import 'package:studio_core/app/services/prefs_backend.dart';
 import 'package:studio_core/app/services/purchases.dart';
 import 'package:studio_core/online/online_service.dart';
 import 'package:studio_core/online/online_ui.dart';
-import 'studio_apps.dart';
-import 'theme.dart';
+import 'package:studio_core/app/studio_apps.dart';
+import 'package:studio_core/app/theme.dart';
 import 'package:studio_core/app/services/cloud_telemetry.dart';
 
 /// A hub ("merkez") app: one store listing that bundles several games of
