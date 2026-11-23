@@ -9,7 +9,7 @@ import 'package:oyun_schulte_tablosu/oyun_schulte_tablosu.dart';
 import 'package:oyun_stroop_testi/oyun_stroop_testi.dart';
 import 'package:oyun_tepki_ve_odak/oyun_tepki_ve_odak.dart';
 import 'package:oyun_uzamsal_dondurme/oyun_uzamsal_dondurme.dart';
-import 'package:studio_core/app/hub.dart';
+import 'approved_hub.dart';
 
 /// Zihin Antrenmanı: hafıza, dikkat ve hız, mantık ve uzam egzersizlerini
 /// tek uygulamada toplar. Her egzersizin kaydı, görevleri ve başarımları ayrıdır.
