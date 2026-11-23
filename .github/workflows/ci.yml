@@ -1,0 +1,198 @@
+name: CI - analyze, test, Android, Web
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege for every job (read-only token).
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Security - no secrets or keys committed
+        run: python tool/check_secrets.py
+
+      - name: Generate icons, splash, sounds and store graphics
+        run: |
+          pip install pillow==11.0.0
+          python tool/generate_assets.py
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Release signing key (only when the secrets are set)
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+            {
+              echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/upload.jks"
+              echo "ANDROID_KEYSTORE_PASSWORD=$KS_PASS"
+              echo "ANDROID_KEY_ALIAS=$KEY_ALIAS"
+              echo "ANDROID_KEY_PASSWORD=$KEY_PASS"
+            } >> "$GITHUB_ENV"
+          else
+            echo "No signing secrets: release build is signed with the debug key (test only)."
+          fi
+
+      - name: Create platform folders (android, ios, web) if missing
+        env:
+          ADMOB_APP_ID_ANDROID: ${{ secrets.ADMOB_APP_ID_ANDROID }}
+          ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
+        run: |
+          flutter create --platforms=android,ios,web --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
+          python tool/patch_platforms.py
+
+      - run: flutter pub get
+
+      - name: App icons and splash screens
+        run: |
+          dart run flutter_launcher_icons
+          dart run flutter_native_splash:create
+
+      - name: Static analysis
+        run: flutter analyze --no-fatal-infos
+
+      - name: Unit, rule, save and 24-month simulation tests
+        run: flutter test --reporter expanded
+
+      - name: Android release APK + App Bundle
+        env:
+          AD_INT: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL }}
+          AD_REW: ${{ secrets.ADMOB_ANDROID_REWARDED }}
+          FB_PROJECT: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FB_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FB_SENDER: ${{ secrets.FIREBASE_SENDER_ID }}
+          FB_ANDROID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+          FB_WEB: ${{ secrets.FIREBASE_WEB_APP_ID }}
+        run: |
+          # Çevrimiçi özellikler yalnızca Firebase gizli değişkenleri tanımlıysa açılır.
+          FB=""
+          if [ -n "$FB_PROJECT" ]; then
+            FB="--dart-define=FIREBASE_PROJECT_ID=$FB_PROJECT --dart-define=FIREBASE_API_KEY=$FB_KEY --dart-define=FIREBASE_SENDER_ID=$FB_SENDER --dart-define=FIREBASE_ANDROID_APP_ID=$FB_ANDROID --dart-define=FIREBASE_WEB_APP_ID=$FB_WEB"
+          fi
+          echo "FB_DEFS=$FB" >> "$GITHUB_ENV"
+          # Gerçek reklam birimleri yalnızca gizli değişkenler tanımlıysa; yoksa test kimlikleri.
+          DEFS="$FB"
+          if [ -n "$AD_INT" ]; then DEFS="$DEFS --dart-define=ADMOB_ANDROID_INTERSTITIAL=$AD_INT"; fi
+          if [ -n "$AD_REW" ]; then DEFS="$DEFS --dart-define=ADMOB_ANDROID_REWARDED=$AD_REW"; fi
+          # Obfuscated release builds; symbols kept as a private artifact
+          # for de-obfuscating crash reports.
+          # One retry: Gradle plugin/Maven mirrors occasionally fail to resolve.
+          # Play her yüklemede daha büyük bir sürüm kodu ister: derleme sırasından türetilir.
+          BN=$((GITHUB_RUN_NUMBER + 100))
+          for t in apk appbundle; do
+            flutter build $t --release $DEFS --build-number=$BN --obfuscate --split-debug-info=build/symbols/android \
+              || (sleep 60 && flutter build $t --release $DEFS --build-number=$BN --obfuscate --split-debug-info=build/symbols/android)
+          done
+
+      - name: Web build (also published on GitHub Pages for device testing)
+        run: flutter build web --release $FB_DEFS --base-href "/merkez-zihin-antrenmani/"
+
+      - name: Package web build for GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: merkez-zihin-antrenmani-android
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: merkez-zihin-antrenmani-debug-symbols
+          path: build/symbols
+          retention-days: 90
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: merkez-zihin-antrenmani-web
+          path: build/web
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: merkez-zihin-antrenmani-store-graphics
+          path: store/
+          retention-days: 30
+
+  # Playable web version on https://<owner>.github.io/merkez-zihin-antrenmani/ so every
+  # phone, tablet and desktop browser can be tested without installing.
+  # Needs Settings > Pages > Source = "GitHub Actions"; if Pages is off the
+  # deploy is skipped without failing CI.
+  # Test APK: tek tıkla indirilebilen sabit bağlantı (GitHub hesabı gerekmez).
+  test-apk:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: merkez-zihin-antrenmani-android
+      - name: Publish to the "test" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SIGNED: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && '1' || '' }}
+        run: |
+          cp flutter-apk/app-release.apk merkez-zihin-antrenmani.apk 2>/dev/null || cp $(find . -name app-release.apk | head -1) merkez-zihin-antrenmani.apk
+          gh release view test >/dev/null 2>&1 || gh release create test --prerelease --target "$GITHUB_SHA" --title "Test sürümü" --notes "Her başarılı derlemede güncellenir."
+          gh release upload test merkez-zihin-antrenmani.apk --clobber
+          # İmza anahtarı tanımlıysa Play'e yüklenecek paket (AAB) de aynı sürüme konur.
+          if [ -n "$SIGNED" ]; then
+            cp $(find . -name app-release.aab | head -1) merkez-zihin-antrenmani.aab
+            gh release upload test merkez-zihin-antrenmani.aab --clobber
+          fi
+          gh release edit test --notes "Test sürümü — derleme ${GITHUB_SHA::7}, $(date -u '+%Y-%m-%d %H:%M') UTC"
+
+  pages:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

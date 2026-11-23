@@ -1,0 +1,33 @@
+name: Nightly endurance (levels 1-10000, 50.000 sample, 24-month simulation)
+
+on:
+  schedule:
+    - cron: "17 2 * * 1"   # weekly, Monday 02:17 UTC (keeps Actions minutes low)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+
+jobs:
+  endurance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install pillow==11.0.0
+          python tool/generate_assets.py
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Long level validation and soak tests
+        run: flutter test --dart-define=LONG=true test/long_run_test.dart test/soak_test.dart

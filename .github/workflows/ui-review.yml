@@ -1,0 +1,70 @@
+name: UI review (new screens, Linux desktop)
+
+# Merkezi ve her oyunun ilk bölümünü gerçek uygulama akışıyla açıp
+# ekran görüntüsü alır; elle başlatılır.
+on:
+  workflow_dispatch:
+    inputs:
+      langs:
+        description: "Virgülle diller"
+        required: false
+        default: "tr,ar"
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install pillow==11.0.0
+          python tool/generate_assets.py
+      - name: Linux build tools and fonts (Noto for all 33 languages)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq clang cmake ninja-build pkg-config libgtk-3-dev xvfb libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libsecret-1-dev libjsoncpp-dev \
+            fonts-noto-core fonts-noto-cjk fonts-noto-ui-core fonts-noto-color-emoji
+          fc-cache -f >/dev/null
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: |
+          flutter create --platforms=android,ios,web,linux --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
+          python tool/patch_platforms.py
+          flutter pub get
+      - name: Walk through the screens
+        run: |
+          mkdir -p review
+          IFS=',' read -ra LS <<< "${{ github.event.inputs.langs || 'tr,ar' }}"
+          for L in "${LS[@]}"; do
+            rm -rf /tmp/review ~/.local/share/com.gamestudio100.merkez_zihin_antrenmani
+            LANG="$L.UTF-8" LANGUAGE="$L" LC_ALL="C.UTF-8" xvfb-run -a -s "-screen 0 1920x1080x24" \
+              flutter test integration_test/ui_review_test.dart -d linux --dart-define=LANG_UI="$L" || true
+            mkdir -p "review/$L" && cp -r /tmp/review/. "review/$L/" || true
+          done
+          ls -R review
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-review
+          path: review/
+          retention-days: 14
+      - name: Publish to the "ui-review" release
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          (cd review && zip -qr ../ui-review.zip .)
+          gh release view ui-review >/dev/null 2>&1 || gh release create ui-review --title "UI review" --notes "Arayüz inceleme görüntüleri" --prerelease
+          gh release upload ui-review ui-review.zip --clobber

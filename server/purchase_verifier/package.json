@@ -1,0 +1,9 @@
+{
+  "name": "gs100-purchase-verifier",
+  "private": true,
+  "main": "index.js",
+  "dependencies": {
+    "googleapis": "^144.0.0",
+    "@apple/app-store-server-library": "^1.4.0"
+  }
+}

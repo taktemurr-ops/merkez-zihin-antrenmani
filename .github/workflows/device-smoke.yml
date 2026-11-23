@@ -1,0 +1,102 @@
+name: Device smoke test (Android phone + tablet emulator, iPhone + iPad simulator)
+
+# Installs the real app on emulators/simulators, launches it, drives the UI
+# with random taps (Android monkey) and fails on crashes (FATAL EXCEPTION /
+# ANR) or if the app is no longer running. Screenshots are kept as artifacts.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [pixel_7, pixel_tablet]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install pillow==11.0.0
+          python tool/generate_assets.py
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: |
+          flutter create --platforms=android,ios,web --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
+          python tool/patch_platforms.py
+          flutter pub get
+          dart run flutter_launcher_icons
+          dart run flutter_native_splash:create
+      - name: Build release APK
+        run: flutter build apk --release || (sleep 60 && flutter build apk --release)
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run on emulator (${{ matrix.profile }})
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: ${{ matrix.profile }}
+          disable-animations: true
+          script: bash tool/smoke_android.sh ${{ matrix.profile }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: merkez-zihin-antrenmani-smoke-android-${{ matrix.profile }}
+          path: smoke/
+          retention-days: 14
+
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install pillow==11.0.0
+          python tool/generate_assets.py
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: |
+          flutter create --platforms=android,ios,web --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
+          python tool/patch_platforms.py
+          flutter pub get
+          dart run flutter_launcher_icons
+          dart run flutter_native_splash:create
+      - name: Build for simulator
+        run: flutter build ios --simulator --debug
+      - name: Run on iPhone and iPad simulators
+        run: bash tool/smoke_ios.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: merkez-zihin-antrenmani-smoke-ios
+          path: smoke/
+          retention-days: 14

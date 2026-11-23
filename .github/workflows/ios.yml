@@ -1,0 +1,54 @@
+name: iOS build
+
+# Runs on every push to main (macOS runners are free for public
+# repositories), on release tags and on demand. If the repository is made
+# private again, macOS minutes cost 10x Linux minutes: remove the
+# `branches` line to keep iOS builds for tags / manual runs only.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install pillow==11.0.0
+          python tool/generate_assets.py
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: |
+          flutter create --platforms=android,ios,web --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
+          python tool/patch_platforms.py
+          flutter pub get
+          dart run flutter_launcher_icons
+          dart run flutter_native_splash:create
+      - name: Build iOS (unsigned)
+        run: flutter build ios --release --no-codesign --obfuscate --split-debug-info=build/symbols/ios
+      - name: Package Runner.app
+        run: cd build/ios/iphoneos && zip -qr ../../../Runner-unsigned.zip Runner.app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: merkez-zihin-antrenmani-ios-unsigned
+          path: Runner-unsigned.zip
+          retention-days: 14

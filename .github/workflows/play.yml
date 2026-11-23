@@ -1,0 +1,61 @@
+# Google Play'e yükleme: mağaza metinleri (33 dil), görseller ve son imzalı paket.
+# Gerekenler: PLAY_JSON_KEY (hizmet hesabı) ve imza anahtarı gizli değişkenleri.
+# İlk paket Play Console'dan elle yüklenmiş olmalı (Play kuralı).
+name: play
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "Kanal: alpha (kapalı test), internal, production"
+        default: alpha
+      upload_bundle:
+        description: "Son imzalı paketi (AAB) de yükle"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      PLAY_JSON_KEY: ${{ secrets.PLAY_JSON_KEY }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Hizmet hesabı tanımlı mı
+        id: key
+        run: |
+          if [ -z "$PLAY_JSON_KEY" ]; then echo "PLAY_JSON_KEY yok: yükleme atlandı."; echo "ok=0" >> "$GITHUB_OUTPUT"; else echo "ok=1" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/setup-python@v5
+        if: steps.key.outputs.ok == '1'
+        with:
+          python-version: "3.12"
+      - name: Simge ve mağaza görselleri
+        if: steps.key.outputs.ok == '1'
+        run: |
+          pip install -q pillow
+          python tool/generate_assets.py
+          gh release download store -R ${{ github.repository }} -p store-graphics.zip
+          mkdir sg && cd sg && unzip -q ../store-graphics.zip && cd ..
+          python tool/play_prepare.py sg
+      - name: İmzalı paket
+        if: steps.key.outputs.ok == '1' && inputs.upload_bundle
+        run: gh release download test -R ${{ github.repository }} -p "merkez-zihin-antrenmani.aab"
+      - uses: ruby/setup-ruby@v1
+        if: steps.key.outputs.ok == '1'
+        with:
+          ruby-version: "3.3"
+      - name: Play'e yükle
+        if: steps.key.outputs.ok == '1'
+        run: |
+          gem install fastlane -N -q
+          echo "$PLAY_JSON_KEY" > "$RUNNER_TEMP/play.json"
+          AAB=""
+          if [ -f "merkez-zihin-antrenmani.aab" ]; then AAB="--aab merkez-zihin-antrenmani.aab --track ${{ inputs.track }} --release_status completed"; else AAB="--skip_upload_aab true --skip_upload_apk true"; fi
+          fastlane supply --package_name com.gamestudio100.merkez_zihin_antrenmani --json_key "$RUNNER_TEMP/play.json" \
+            --metadata_path fastlane/metadata/android $AAB \
+            --skip_upload_changelogs true --sync_image_upload true

@@ -1,0 +1,33 @@
+# Release automation (doc: "Yayın otomasyonu - Fastlane").
+# Requires store credentials as environment secrets; see docs/RELEASE.md.
+
+platform :android do
+  desc "Upload the release App Bundle to the Play Console internal track"
+  lane :internal do
+    sh("cd .. && flutter build appbundle --release")
+    upload_to_play_store(
+      track: "internal",
+      aab: "../build/app/outputs/bundle/release/app-release.aab",
+      metadata_path: "./metadata/android",
+      json_key: ENV["PLAY_JSON_KEY"]
+    )
+  end
+
+  desc "Promote internal -> production"
+  lane :production do
+    upload_to_play_store(track: "internal", track_promote_to: "production", json_key: ENV["PLAY_JSON_KEY"])
+  end
+end
+
+platform :ios do
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    sh("cd .. && flutter build ipa --release")
+    upload_to_testflight(ipa: Dir["../build/ios/ipa/*.ipa"].first, skip_waiting_for_build_processing: true)
+  end
+
+  desc "Upload metadata and screenshots"
+  lane :metadata do
+    deliver(metadata_path: "./metadata/ios", skip_binary_upload: true, force: true)
+  end
+end

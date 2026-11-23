@@ -1,0 +1,107 @@
+name: Store screenshots (33 languages, phone + tablet + feature graphic)
+
+# Gerçek oyun ekranlarından mağaza görselleri üretir; elle başlatılır.
+# Sonuç: "store" sürümüne store-graphics.zip olarak yüklenir.
+on:
+  workflow_dispatch:
+    inputs:
+      langs:
+        description: "Virgülle diller (boş = 33 dilin hepsi)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install pillow==11.0.0
+          python tool/generate_assets.py
+      - name: Linux build tools and fonts (Noto for all 33 languages)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq clang cmake ninja-build pkg-config libgtk-3-dev xvfb libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libsecret-1-dev libjsoncpp-dev \
+            fonts-noto-core fonts-noto-cjk fonts-noto-ui-core fonts-noto-color-emoji
+          fc-cache -f >/dev/null
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: |
+          flutter create --platforms=android,ios,web,linux --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
+          python tool/patch_platforms.py
+          flutter pub get
+      - name: Render on the build machine (Linux desktop, no emulator)
+        run: bash tool/store_shots.sh "${{ github.event.inputs.langs }}"
+      - run: python tool/crop_store.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: store-shots
+          path: shots/store/
+          retention-days: 30
+
+  publish:
+    needs: shots
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: store-shots*
+          path: all
+          merge-multiple: true
+      - run: |
+          cd all && zip -qr ../store-graphics.zip . && cd ..
+          ls -la store-graphics.zip
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view store -R ${{ github.repository }} >/dev/null 2>&1 || \
+            gh release create store -R ${{ github.repository }} --title "Mağaza görselleri" --notes "33 dilde telefon/tablet ekran görüntüleri ve öne çıkan görsel." --prerelease
+          gh release upload store store-graphics.zip -R ${{ github.repository }} --clobber
+      - name: Preview sheet (first language) on store-preview branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pip install pillow==11.0.0 >/dev/null
+          python - <<'PY'
+          import glob, os
+          from PIL import Image
+          files = sorted(glob.glob('all/**/*.png', recursive=True))
+          langs = sorted({os.path.basename(os.path.dirname(f)) for f in files})
+          lang = 'tr' if 'tr' in langs else langs[0]
+          pick = [f for f in files if os.path.basename(os.path.dirname(f)) == lang]
+          thumbs = []
+          for f in pick:
+              im = Image.open(f).convert('RGB')
+              im.thumbnail((360, 360))
+              thumbs.append(im)
+          w = sum(t.width for t in thumbs) + 10 * (len(thumbs) + 1)
+          h = max(t.height for t in thumbs) + 20
+          sheet = Image.new('RGB', (w, h), (40, 40, 40))
+          x = 10
+          for t in thumbs:
+              sheet.paste(t, (x, 10)); x += t.width + 10
+          os.makedirs('preview', exist_ok=True)
+          sheet.save('preview/sheet.jpg', quality=85)
+          PY
+          cd preview
+          git init -q -b store-preview
+          git config user.name "store-bot"; git config user.email "store-bot@users.noreply.github.com"
+          git add sheet.jpg && git commit -qm "Mağaza görselleri önizleme"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}" store-preview

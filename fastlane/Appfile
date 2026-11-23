@@ -1,0 +1,4 @@
+package_name("com.gamestudio100.merkez_zihin_antrenmani")
+app_identifier("com.gamestudio100.merkez_zihin_antrenmani")
+# json_key_file(ENV["PLAY_JSON_KEY"])   # Google Play service account (secret)
+# apple_id(ENV["APPLE_ID"])

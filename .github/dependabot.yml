@@ -1,0 +1,31 @@
+# Monthly dependency updates for Dart packages and CI actions.
+# Major versions are ignored (they need a manual migration, e.g. Riverpod 3,
+# flutter_lints 6); minor/patch updates arrive as ONE grouped PR per ecosystem
+# so CI minutes stay low across 100 repositories. Security advisories still
+# open their own PRs (GitHub Dependabot security updates).
+version: 2
+updates:
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      pub-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      actions-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
