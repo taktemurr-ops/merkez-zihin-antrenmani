@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:studio_core/app/covers.dart';
+import 'package:studio_core/app/hub.dart' as shared;
 export 'package:studio_core/app/covers.dart' show GameCover, CoverArt;
 import 'package:studio_core/core/game_session.dart';
 import 'package:studio_core/core/monetization.dart';
@@ -96,30 +97,8 @@ class HubConfig {
 }
 
 /// A heading on the hub's home screen with the games (and groups) under it.
-class HubSection {
-  final List<String> title;
-  final List<String> ids;
-  const HubSection({required this.title, required this.ids});
-}
-
-/// A tile on the hub's home screen that opens a list of variant games.
-class HubGroup {
-  final String id;
-  final List<String> title;
-  final List<String> tagline;
-  final Color seedColor;
-  final IconData icon;
-  final List<GameConfig> games;
-
-  const HubGroup({
-    required this.id,
-    required this.title,
-    required this.tagline,
-    required this.seedColor,
-    required this.icon,
-    required this.games,
-  });
-}
+typedef HubSection = shared.HubSection;
+typedef HubGroup = shared.HubGroup;
 
 /// Device-level services shared by all games inside a hub.
 class HubServices {
