@@ -85,7 +85,7 @@ final hubConfig = HubConfig(
       'Bài tập trí nhớ, chú ý, tốc độ và logic trong một ứng dụng',
       'Ehersisyo sa memorya, atensyon, bilis at lohika sa iisang app',
     ],
-  seedColor: const Color(0xFF5E60A8),
+  seedColor: const Color(0xFF127DA8),
   icon: Icons.psychology_alt,
   games: [
     gunlukProgramConfig,
