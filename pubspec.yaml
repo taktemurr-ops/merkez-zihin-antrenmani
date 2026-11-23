@@ -13,48 +13,48 @@ dependencies:
   studio_core:
     git:
       url: https://github.com/taktemurr-ops/studio-core
-      ref: 71553283c36d7f672f375de54219020461cead06
+      ref: 921df6392b2121ffd438a286673ef9f10c988273
   # Merkezdeki oyunlar (her biri kendi deposunda)
   oyun_gunluk_beyin_egzersizi_programi:
     git:
       url: https://github.com/taktemurr-ops/oyun-gunluk-beyin-egzersizi-programi
-      ref: main
+      ref: 43238d09595c90ffb3ce914ceea9b8e019f3ef73
   oyun_hafiza_dizisi:
     git:
       url: https://github.com/taktemurr-ops/oyun-hafiza-dizisi
-      ref: main
+      ref: f8ac0447c6abf49305c9c9464d37b8fc8adbf1a1
   oyun_gorsel_hafiza_izgarasi:
     git:
       url: https://github.com/taktemurr-ops/oyun-gorsel-hafiza-izgarasi
-      ref: main
+      ref: bf038723af46ee8a0203c456b9b6b966487243bc
   oyun_n_geri:
     git:
       url: https://github.com/taktemurr-ops/oyun-n-geri
-      ref: main
+      ref: 3a7e53c876f66d97bfc1710fe4745b4ba3e00129
   oyun_stroop_testi:
     git:
       url: https://github.com/taktemurr-ops/oyun-stroop-testi
-      ref: main
+      ref: 8793e53e13a9f92b03d87ed20c545234dbca1dfe
   oyun_schulte_tablosu:
     git:
       url: https://github.com/taktemurr-ops/oyun-schulte-tablosu
-      ref: main
+      ref: d82cb728b6a714a291408a343c241ad111b46faa
   oyun_tepki_ve_odak:
     git:
       url: https://github.com/taktemurr-ops/oyun-tepki-ve-odak
-      ref: main
+      ref: a3641e0c26a590a0572ac3f13dabe9976615940d
   oyun_hizli_hesap:
     git:
       url: https://github.com/taktemurr-ops/oyun-hizli-hesap
-      ref: main
+      ref: bc664ee0485f61925df5150f212f8cd42cb20f30
   oyun_oruntu_tamamlama:
     git:
       url: https://github.com/taktemurr-ops/oyun-oruntu-tamamlama
-      ref: main
+      ref: 41a709009363fdaf53af09deb42f0890f074cee0
   oyun_uzamsal_dondurme:
     git:
       url: https://github.com/taktemurr-ops/oyun-uzamsal-dondurme
-      ref: main
+      ref: 52af38985cf799bc226c59ab2039b6fd7799d022
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^2.6.1
@@ -68,11 +68,11 @@ dependency_overrides:
   studio_core:
     git:
       url: https://github.com/taktemurr-ops/studio-core
-      ref: 71553283c36d7f672f375de54219020461cead06
+      ref: 921df6392b2121ffd438a286673ef9f10c988273
   zihin_motoru:
     git:
       url: https://github.com/taktemurr-ops/zihin-motoru
-      ref: 1f590118716c156f8ba02b3db968ab218240dd31
+      ref: 7419ad90a7528b1d753de35cfd5b0fb3032e01d3
 
 dev_dependencies:
   flutter_test:
