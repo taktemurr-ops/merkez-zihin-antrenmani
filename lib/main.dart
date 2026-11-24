@@ -11,7 +11,7 @@ import 'package:oyun_stroop_testi/oyun_stroop_testi.dart';
 import 'package:oyun_tepki_ve_odak/oyun_tepki_ve_odak.dart';
 import 'package:oyun_uzamsal_dondurme/oyun_uzamsal_dondurme.dart';
 import 'package:oyun_yuz_ve_isim/oyun_yuz_ve_isim.dart';
-import 'approved_hub.dart';
+import 'package:studio_core/app/hub.dart';
 
 /// Zihin Antrenmanı: hafıza, dikkat ve hız, mantık ve uzam egzersizlerini
 /// tek uygulamada toplar. Her egzersizin kaydı, görevleri ve başarımları ayrıdır.
@@ -87,7 +87,7 @@ final hubConfig = HubConfig(
       'Bài tập trí nhớ, chú ý, tốc độ và logic trong một ứng dụng',
       'Ehersisyo sa memorya, atensyon, bilis at lohika sa iisang app',
     ],
-  seedColor: const Color(0xFF127DA8),
+  seedColor: const Color(0xFF5E60A8),
   icon: Icons.psychology_alt,
   games: [
     gunlukProgramConfig,
