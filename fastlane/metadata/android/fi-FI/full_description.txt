@@ -1,8 +1,8 @@
-Aivotreeni kokoaa 12 lyhyttä aivoharjoitusta yhteen sovellukseen omalla ilmeellä: muisti, tarkkaavaisuus ja nopeus, logiikka ja avaruudellinen hahmotus. Jokaisella harjoituksella on oma edistyminen, tehtävät ja saavutukset; Päivän Aivotreeni tarjoaa joka päivä kolme eri harjoitusta. Harjoitukset ovat ajanvietettä ja harjoittelua, eivät lääketieteellinen väite.
+Aivotreeni kokoaa 15 lyhyttä aivoharjoitusta yhteen sovellukseen omalla ilmeellä: muisti, tarkkaavaisuus ja nopeus, logiikka ja avaruudellinen hahmotus. Jokaisella harjoituksella on oma edistyminen, tehtävät ja saavutukset; Päivän Aivotreeni tarjoaa joka päivä kolme eri harjoitusta. Harjoitukset ovat ajanvietettä ja harjoittelua, eivät lääketieteellinen väite.
 
 • Joka päivä: Päivän Aivotreeni
-• Muisti: Värijono, Näkömuisti, N-Takaisin, Kasvot ja Nimet
-• Tarkkaavaisuus ja nopeus: Väri vai Sana, Numerotaulukko, Reaktio ja Keskittyminen, Pikalaskut, Kaksoistehtävä
+• Muisti: Värijono, Näkömuisti, N-Takaisin, Kasvot ja Nimet, Numerosarja, Sanamuisti
+• Tarkkaavaisuus ja nopeus: Väri vai Sana, Numerotaulukko, Reaktio ja Keskittyminen, Pikalaskut, Kaksoistehtävä, Visuaalinen Haku
 • Logiikka ja avaruus: Täydennä Kuvio, Avaruudellinen Kierto
 
 Kohokohdat

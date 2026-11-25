@@ -1,8 +1,8 @@
-Zihin Antrenmanı, 12 kısa zihin egzersizini stüdyonun kendine özgü tasarımıyla tek uygulamada toplar: hafıza, dikkat ve hız, mantık ve uzam. Her egzersizin ilerlemesi, görevleri ve başarımları ayrıdır; Günlük Zihin Programı her gün farklı üç egzersiz sunar. Egzersizler eğlence ve alıştırma içindir; tıbbi bir iddia taşımaz.
+Zihin Antrenmanı, 15 kısa zihin egzersizini stüdyonun kendine özgü tasarımıyla tek uygulamada toplar: hafıza, dikkat ve hız, mantık ve uzam. Her egzersizin ilerlemesi, görevleri ve başarımları ayrıdır; Günlük Zihin Programı her gün farklı üç egzersiz sunar. Egzersizler eğlence ve alıştırma içindir; tıbbi bir iddia taşımaz.
 
 • Her gün: Günlük Zihin Programı
-• Hafıza: Renk Dizisi, Görsel Hafıza, Geri Hafıza, Yüz ve İsim
-• Dikkat ve hız: Renk mi Kelime mi, Sayı Tablosu, Tepki ve Odak, Hızlı Hesap, Çift Görev
+• Hafıza: Renk Dizisi, Görsel Hafıza, Geri Hafıza, Yüz ve İsim, Rakam Dizisi, Kelime Hafızası
+• Dikkat ve hız: Renk mi Kelime mi, Sayı Tablosu, Tepki ve Odak, Hızlı Hesap, Çift Görev, Görsel Arama
 • Mantık ve uzam: Örüntü Tamamla, Uzamsal Döndürme
 
 Öne çıkanlar

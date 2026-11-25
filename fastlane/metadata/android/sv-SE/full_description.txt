@@ -1,8 +1,8 @@
-Hjärnträning samlar 12 korta hjärnövningar i en app med egen design: minne, uppmärksamhet och fart, logik och rumsuppfattning. Varje övning har egna framsteg, uppdrag och prestationer; Daglig Hjärnplan ger tre olika övningar varje dag. Övningarna är för nöje och träning och gör inga medicinska påståenden.
+Hjärnträning samlar 15 korta hjärnövningar i en app med egen design: minne, uppmärksamhet och fart, logik och rumsuppfattning. Varje övning har egna framsteg, uppdrag och prestationer; Daglig Hjärnplan ger tre olika övningar varje dag. Övningarna är för nöje och träning och gör inga medicinska påståenden.
 
 • Varje dag: Daglig Hjärnplan
-• Minne: Färgföljd, Visuellt Minne, N-Bakåt, Ansikten och Namn
-• Uppmärksamhet och fart: Färg eller Ord, Siffertabell, Reflex och Fokus, Snabbräkning, Dubbeluppdrag
+• Minne: Färgföljd, Visuellt Minne, N-Bakåt, Ansikten och Namn, Sifferföljd, Ordminne
+• Uppmärksamhet och fart: Färg eller Ord, Siffertabell, Reflex och Fokus, Snabbräkning, Dubbeluppdrag, Visuellt Sök
 • Logik och rum: Fortsätt Mönstret, Rumslig Rotation
 
 Höjdpunkter

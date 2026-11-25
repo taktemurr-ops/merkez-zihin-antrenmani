@@ -55,6 +55,18 @@ dependencies:
     git:
       url: https://github.com/taktemurr-ops/oyun-cift-gorev
       ref: fa01059e504e2307cee99d66024f3aff2e3a6c10
+  oyun_rakam_dizisi:
+    git:
+      url: https://github.com/taktemurr-ops/oyun-rakam-dizisi
+      ref: main
+  oyun_gorsel_arama:
+    git:
+      url: https://github.com/taktemurr-ops/oyun-gorsel-arama
+      ref: main
+  oyun_kelime_hafizasi:
+    git:
+      url: https://github.com/taktemurr-ops/oyun-kelime-hafizasi
+      ref: main
   oyun_oruntu_tamamlama:
     git:
       url: https://github.com/taktemurr-ops/oyun-oruntu-tamamlama

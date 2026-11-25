@@ -1,8 +1,8 @@
-A Agytorna 12 rövid agytorna-gyakorlatot gyűjt egy alkalmazásba saját dizájnnal: memória, figyelem és gyorsaság, logika és térlátás. Minden gyakorlatnak saját haladása, küldetései és eredményei vannak; a Napi Agyprogram minden nap három másik gyakorlatot ad. A gyakorlatok szórakozásra és gyakorlásra valók, orvosi állítás nélkül.
+A Agytorna 15 rövid agytorna-gyakorlatot gyűjt egy alkalmazásba saját dizájnnal: memória, figyelem és gyorsaság, logika és térlátás. Minden gyakorlatnak saját haladása, küldetései és eredményei vannak; a Napi Agyprogram minden nap három másik gyakorlatot ad. A gyakorlatok szórakozásra és gyakorlásra valók, orvosi állítás nélkül.
 
 • Minden nap: Napi Agyprogram
-• Memória: Színsor, Vizuális Memória, N-Vissza, Arcok és Nevek
-• Figyelem és gyorsaság: Szín vagy Szó, Számtábla, Reflex és Fókusz, Fejszámolás, Kettős Feladat
+• Memória: Színsor, Vizuális Memória, N-Vissza, Arcok és Nevek, Számsor, Szómemória
+• Figyelem és gyorsaság: Szín vagy Szó, Számtábla, Reflex és Fókusz, Fejszámolás, Kettős Feladat, Vizuális Keresés
 • Logika és tér: Mintázat-kiegészítő, Térbeli Forgatás
 
 Kiemelt

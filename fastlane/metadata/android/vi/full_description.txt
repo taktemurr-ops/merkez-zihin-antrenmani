@@ -1,8 +1,8 @@
-Luyện Trí Não gom 12 bài luyện não ngắn vào một ứng dụng với thiết kế riêng: trí nhớ, chú ý và tốc độ, logic và không gian. Mỗi bài có tiến trình, nhiệm vụ và thành tích riêng; Kế Hoạch Trí Não Mỗi Ngày đưa ra ba bài khác nhau mỗi ngày. Các bài tập để giải trí và rèn luyện, không đưa ra tuyên bố y khoa.
+Luyện Trí Não gom 15 bài luyện não ngắn vào một ứng dụng với thiết kế riêng: trí nhớ, chú ý và tốc độ, logic và không gian. Mỗi bài có tiến trình, nhiệm vụ và thành tích riêng; Kế Hoạch Trí Não Mỗi Ngày đưa ra ba bài khác nhau mỗi ngày. Các bài tập để giải trí và rèn luyện, không đưa ra tuyên bố y khoa.
 
 • Mỗi ngày: Kế Hoạch Trí Não Mỗi Ngày
-• Trí nhớ: Chuỗi Màu, Trí Nhớ Hình, N-Lùi, Khuôn mặt và Tên
-• Chú ý và tốc độ: Màu hay Chữ, Bảng Số, Phản Xạ và Tập Trung, Tính Nhanh, Nhiệm Vụ Kép
+• Trí nhớ: Chuỗi Màu, Trí Nhớ Hình, N-Lùi, Khuôn mặt và Tên, Dãy số, Trí nhớ từ ngữ
+• Chú ý và tốc độ: Màu hay Chữ, Bảng Số, Phản Xạ và Tập Trung, Tính Nhanh, Nhiệm Vụ Kép, Tìm kiếm thị giác
 • Logic và không gian: Hoàn Thành Quy Luật, Xoay Không Gian
 
 Điểm nổi bật
