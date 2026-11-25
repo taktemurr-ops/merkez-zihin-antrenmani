@@ -58,15 +58,15 @@ dependencies:
   oyun_rakam_dizisi:
     git:
       url: https://github.com/taktemurr-ops/oyun-rakam-dizisi
-      ref: main
+      ref: 5048679ec6803bbf2f2b040791242dfbbc09ea3f
   oyun_gorsel_arama:
     git:
       url: https://github.com/taktemurr-ops/oyun-gorsel-arama
-      ref: main
+      ref: de533e2b21d53f796c8afa350f783f9eb42c9266
   oyun_kelime_hafizasi:
     git:
       url: https://github.com/taktemurr-ops/oyun-kelime-hafizasi
-      ref: main
+      ref: 39e11a3e0cefdcea87fdf92e1b3662d9ef10fe2a
   oyun_oruntu_tamamlama:
     git:
       url: https://github.com/taktemurr-ops/oyun-oruntu-tamamlama
@@ -92,7 +92,7 @@ dependency_overrides:
   zihin_motoru:
     git:
       url: https://github.com/taktemurr-ops/zihin-motoru
-      ref: 41e139d41a39b2bdc9365fddb6b78239959b414b
+      ref: d17d3f2c82ebcc537075e52806c7f993ff5121db
 
 dev_dependencies:
   flutter_test:
