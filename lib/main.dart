@@ -11,7 +11,10 @@ import 'package:oyun_stroop_testi/oyun_stroop_testi.dart';
 import 'package:oyun_tepki_ve_odak/oyun_tepki_ve_odak.dart';
 import 'package:oyun_uzamsal_dondurme/oyun_uzamsal_dondurme.dart';
 import 'package:oyun_yuz_ve_isim/oyun_yuz_ve_isim.dart';
+import 'package:studio_core/app/approved_hub.dart';
 import 'package:studio_core/app/hub.dart';
+
+import 'approved_style.dart';
 
 /// Zihin Antrenmanı: hafıza, dikkat ve hız, mantık ve uzam egzersizlerini
 /// tek uygulamada toplar. Her egzersizin kaydı, görevleri ve başarımları ayrıdır.
@@ -271,4 +274,4 @@ final hubConfig = HubConfig(
   ],
 );
 
-void main() => bootstrapHub(hubConfig);
+void main() => bootstrapApprovedHub(hubConfig, approvedStyle);
