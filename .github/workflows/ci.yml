@@ -64,6 +64,7 @@ jobs:
         run: |
           flutter create --platforms=android,ios,web --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
           python tool/patch_platforms.py
+          python tool/platforms_extra.py
 
       - run: flutter pub get
 
@@ -127,7 +128,10 @@ jobs:
           ls -l build/app/outputs/flutter-apk/*.apk build/app/outputs/bundle/release/*.aab
 
       - name: Web build (also published on GitHub Pages for device testing)
-        run: flutter build web --release $FB_DEFS --base-href "/merkez-zihin-antrenmani/"
+        # PWA: CanvasKit yerel (CDN'siz), çevrimdışı service worker ve manifest.
+        run: |
+          flutter build web --release $FB_DEFS --no-web-resources-cdn --base-href "/merkez-zihin-antrenmani/"
+          python tool/platforms_extra.py pwa build/web
 
       - name: Package web build for GitHub Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -201,9 +205,33 @@ jobs:
           fi
           gh release edit test --notes "Test sürümü — derleme ${GITHUB_SHA::7}, $(date -u '+%Y-%m-%d %H:%M') UTC"
 
-  pages:
+  # GitHub Pages yalnızca depoda açıksa yayımlanır (Settings > Pages >
+  # Source = "GitHub Actions"). Kapalıyken iş atlanır, CI kırmızı olmaz.
+  pages-check:
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pages: read
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bt=$(gh api "repos/${{ github.repository }}/pages" --jq .build_type 2>/dev/null || true)
+          if [ "$bt" = "workflow" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "GitHub Pages kapalı (ya da kaynak GitHub Actions değil): yayımlama atlandı." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  pages:
+    needs: [build, pages-check]
+    if: needs.pages-check.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     continue-on-error: true
     timeout-minutes: 10

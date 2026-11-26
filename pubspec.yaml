@@ -13,7 +13,7 @@ dependencies:
   studio_core:
     git:
       url: https://github.com/taktemurr-ops/studio-core
-      ref: 27330cd30b8fbedd4d33cf8cb781cd3bb8376dd8
+      ref: 7e2e219a0cb2b9dc1d1b3e8f03cace0347001b10
   # Merkezdeki oyunlar (her biri kendi deposunda)
   oyun_gunluk_beyin_egzersizi_programi:
     git:
@@ -100,7 +100,7 @@ dependency_overrides:
   studio_core:
     git:
       url: https://github.com/taktemurr-ops/studio-core
-      ref: 27330cd30b8fbedd4d33cf8cb781cd3bb8376dd8
+      ref: 7e2e219a0cb2b9dc1d1b3e8f03cace0347001b10
   zihin_motoru:
     git:
       url: https://github.com/taktemurr-ops/zihin-motoru

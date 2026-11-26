@@ -1,0 +1,71 @@
+name: Desktop store upload (Microsoft Store / Mac App Store)
+
+# Elle (veya v* etiketiyle) çalışır. Gizli değişkenler yoksa her adım
+# "atlandı" yazar ve iş başarıyla biter. Paketler "test" sürümündeki son
+# masaüstü derlemesinden alınır (desktop.yml). Ayrıntılar: ship/MASAUSTU_WEB.md.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+env:
+  HUB: merkez-zihin-antrenmani
+
+jobs:
+  microsoft-store:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    env:
+      TENANT: ${{ secrets.MS_STORE_TENANT_ID }}
+      CLIENT_ID: ${{ secrets.MS_STORE_CLIENT_ID }}
+      CLIENT_SECRET: ${{ secrets.MS_STORE_CLIENT_SECRET }}
+      SELLER: ${{ secrets.MS_STORE_SELLER_ID }}
+      PRODUCT: ${{ secrets.MS_STORE_PRODUCT_ID }}
+    steps:
+      - name: Skip without Partner Center secrets
+        if: env.TENANT == '' || env.CLIENT_ID == '' || env.CLIENT_SECRET == '' || env.SELLER == '' || env.PRODUCT == ''
+        run: |
+          echo "Microsoft Store gizli değişkenleri yok (MS_STORE_*): yükleme atlandı."
+      - uses: microsoft/setup-msstore-cli@v1
+        if: env.TENANT != '' && env.CLIENT_ID != '' && env.CLIENT_SECRET != '' && env.SELLER != '' && env.PRODUCT != ''
+      - name: Upload MSIX to Partner Center
+        if: env.TENANT != '' && env.CLIENT_ID != '' && env.CLIENT_SECRET != '' && env.SELLER != '' && env.PRODUCT != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release download test -p "$HUB-windows-msix.zip" -D pkg --clobber
+          (cd pkg && 7z x -y "$HUB-windows-msix.zip" >/dev/null)
+          msstore reconfigure --tenantId "$TENANT" --sellerId "$SELLER" --clientId "$CLIENT_ID" --clientSecret "$CLIENT_SECRET"
+          msstore publish "pkg/$HUB.msix" -id "$PRODUCT"
+
+  mac-app-store:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      INSTALLER: ${{ secrets.MACOS_INSTALLER_CERT_P12 }}
+    steps:
+      - name: Skip without App Store Connect secrets
+        if: env.ASC_KEY_ID == '' || env.ASC_ISSUER_ID == '' || env.ASC_KEY_P8 == '' || env.INSTALLER == ''
+        run: |
+          echo "App Store Connect / Mac yükleyici sertifikası gizli değişkenleri yok: yükleme atlandı."
+      - name: Upload signed .pkg to App Store Connect
+        if: env.ASC_KEY_ID != '' && env.ASC_ISSUER_ID != '' && env.ASC_KEY_P8 != '' && env.INSTALLER != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release download test -p "$HUB-macos-pkg.zip" -D pkg --clobber
+          (cd pkg && ditto -x -k "$HUB-macos-pkg.zip" .)
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$ASC_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+          xcrun altool --upload-package "pkg/$HUB-macos.pkg" --type macos --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
