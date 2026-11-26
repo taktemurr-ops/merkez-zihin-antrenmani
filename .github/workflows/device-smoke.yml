@@ -70,6 +70,7 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: ${{ matrix.profile }}
+          cores: 3
           ram-size: 3072M
           heap-size: 576M
           disk-size: 6G
@@ -78,7 +79,7 @@ jobs:
           disable-animations: true
           script: bash tool/smoke_android.sh ${{ matrix.profile }}
       # Altyapı kaynaklı (adb offline / emülatör çöktü) aksaklıklara karşı
-      # temiz bir emülatörde (Vulkan açık, varsayılan grafik yolu) bir kez daha;
+      # temiz bir emülatörde (konuk içi yazılım çizimi, -gpu guest) bir kez daha;
       # gerçek çökme iki denemede de düşer.
       - name: Retry on a fresh emulator (${{ matrix.profile }})
         if: steps.emu1.outcome == 'failure'
@@ -89,11 +90,12 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: ${{ matrix.profile }}
+          cores: 3
           ram-size: 3072M
           heap-size: 576M
           disk-size: 6G
           emulator-boot-timeout: 600
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu guest -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: bash tool/smoke_android.sh ${{ matrix.profile }}-retry
       - uses: actions/upload-artifact@v4
