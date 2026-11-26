@@ -6,9 +6,12 @@ name: Desktop - Windows (MSIX) and macOS
 #
 # İmza yalnızca gizli değişkenler tanımlıysa yapılır; yoksa imzasız paketler
 # üretilir ve "test" sürümüne zip olarak konur.
+# Uzun ve pahalı (Windows + macOS) derleme: her push'ta değil; her gece,
+# v* etiketinde ve elle (Actions > Desktop > Run workflow).
 on:
+  schedule:
+    - cron: "17 2 * * *"
   push:
-    branches: [main]
     tags: ["v*"]
   workflow_dispatch:
 
@@ -224,7 +227,7 @@ jobs:
 
   # Zip'ler "test" sürümüne (GitHub hesabı olmadan indirilebilir bağlantı).
   publish:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     needs: [windows, macos]
     runs-on: ubuntu-latest
     permissions:
