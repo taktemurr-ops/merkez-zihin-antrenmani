@@ -25,14 +25,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 50
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
       - run: |
           pip install pillow==11.0.0
           python tool/generate_assets.py
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
@@ -52,7 +52,7 @@ jobs:
             flutter build apk --debug $T || (sleep 90 && flutter build apk --debug $T)
           fi
       - run: grep -hm1 'applicationId' android/app/build.gradle* | sed -E 's/.*"([^"]+)".*/\1/' > smoke-pkg.txt && cat smoke-pkg.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: apks
           path: |
@@ -82,8 +82,8 @@ jobs:
           - { name: api35-pixel_7, api: 35, profile: pixel_7, wm: "" }
           - { name: api36-pixel_7_pro, api: 36, profile: pixel_7_pro, wm: "" }
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: apks
           path: .
@@ -99,7 +99,7 @@ jobs:
         timeout-minutes: 30
         env:
           SMOKE_WM: ${{ matrix.wm }}
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
           api-level: ${{ matrix.api }}
           target: google_apis
@@ -120,7 +120,7 @@ jobs:
         timeout-minutes: 30
         env:
           SMOKE_WM: ${{ matrix.wm }}
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
           api-level: ${{ matrix.api }}
           target: google_apis
@@ -134,7 +134,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: bash tool/smoke_android.sh ${{ matrix.name }}-retry
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: merkez-zihin-antrenmani-matrix-${{ matrix.name }}
@@ -145,14 +145,14 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 75
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
       - run: |
           pip install pillow==11.0.0
           python tool/generate_assets.py
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
@@ -168,7 +168,7 @@ jobs:
       # En küçük desteklenen iPhone (SE 3. nesil; yoksa 16e), büyük iPhone, iPad.
       - name: Run on iPhone SE, large iPhone and iPad simulators
         run: bash tool/smoke_ios.sh "iPhone SE~iPhone 16e~iPhone 1|iPhone 1[0-9] Pro Max~iPhone 1[0-9] Plus~iPhone 1|iPad Pro 13~iPad Air 13~iPad"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: merkez-zihin-antrenmani-matrix-ios

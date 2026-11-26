@@ -243,8 +243,52 @@ def web():
         write(manifest, json.dumps(m, indent=2, ensure_ascii=False))
 
 
+# Güvenlik denetimi (2026-11-26): Android yedekleme kuralları.
+# Biyometrik anahtarın şifreli deposu (flutter_secure_storage) ve gizli albüm
+# hiçbir yedeğe alınmaz (anahtar Keystore'da kalır, geri yüklenince bozulur).
+# LOCAL_ONLY: sağlık/finans kayıtları Google bulut yedeğine alınmaz; yalnızca
+# yeni telefona doğrudan aktarımda (cihazdan cihaza) taşınır.
+LOCAL_ONLY_BACKUP = False
+
+_SECRET_EXCLUDES = (
+    '    <exclude domain="sharedpref" path="FlutterSecureStorage.xml"/>\n'
+    '    <exclude domain="root" path="app_flutter/gizli_album/"/>\n'
+    '    <exclude domain="root" path="app_flutter/gizli_album_tmp/"/>\n'
+)
+_ALL_EXCLUDES = "".join(
+    '    <exclude domain="%s" path="."/>\n' % d for d in ("root", "file", "database", "sharedpref", "external")
+)
+
+
+def android_backup():
+    man = "android/app/src/main/AndroidManifest.xml"
+    res = "android/app/src/main/res"
+    if not os.path.exists(man) or not os.path.isdir(res):
+        return
+    os.makedirs(res + "/xml", exist_ok=True)
+    full = _ALL_EXCLUDES if LOCAL_ONLY_BACKUP else _SECRET_EXCLUDES
+    write(res + "/xml/gs100_backup_rules.xml",
+          '<?xml version="1.0" encoding="utf-8"?>\n<full-backup-content>\n%s</full-backup-content>\n' % full)
+    cloud = _ALL_EXCLUDES if LOCAL_ONLY_BACKUP else _SECRET_EXCLUDES
+    write(res + "/xml/gs100_data_extraction_rules.xml",
+          '<?xml version="1.0" encoding="utf-8"?>\n<data-extraction-rules>\n'
+          '  <cloud-backup>\n%s  </cloud-backup>\n'
+          '  <device-transfer>\n%s  </device-transfer>\n'
+          '</data-extraction-rules>\n' % (cloud.replace("    <", "    <"), _SECRET_EXCLUDES))
+    s = read(man)
+    if "android:fullBackupContent" not in s:
+        s = s.replace(
+            "<application",
+            '<application android:fullBackupContent="@xml/gs100_backup_rules" '
+            'android:dataExtractionRules="@xml/gs100_data_extraction_rules"',
+            1,
+        )
+        write(man, s)
+
+
 if __name__ == "__main__":
     android()
+    android_backup()
     ios()
     web()
     print("platform folders patched")

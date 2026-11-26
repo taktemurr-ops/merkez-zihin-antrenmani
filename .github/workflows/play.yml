@@ -22,15 +22,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
-      PLAY_JSON_KEY: ${{ secrets.PLAY_JSON_KEY }}
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Hizmet hesabı tanımlı mı
         id: key
+        env:
+          PLAY_JSON_KEY: ${{ secrets.PLAY_JSON_KEY }}
         run: |
           if [ -z "$PLAY_JSON_KEY" ]; then echo "PLAY_JSON_KEY yok: yükleme atlandı."; echo "ok=0" >> "$GITHUB_OUTPUT"; else echo "ok=1" >> "$GITHUB_OUTPUT"; fi
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         if: steps.key.outputs.ok == '1'
         with:
           python-version: "3.12"
@@ -45,15 +46,20 @@ jobs:
       - name: İmzalı paket
         if: steps.key.outputs.ok == '1' && inputs.upload_bundle
         run: gh release download test -R ${{ github.repository }} -p "merkez-zihin-antrenmani.aab"
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@145243922b4465b78e04dd66294782c7de45901f # v1
         if: steps.key.outputs.ok == '1'
         with:
           ruby-version: "3.3"
       - name: Play'e yükle
         if: steps.key.outputs.ok == '1'
+        # Hizmet hesabı anahtarı yalnızca bu adımda; dosya adım bitince silinir.
+        env:
+          PLAY_JSON_KEY: ${{ secrets.PLAY_JSON_KEY }}
         run: |
           gem install fastlane -N -q
-          echo "$PLAY_JSON_KEY" > "$RUNNER_TEMP/play.json"
+          trap 'rm -f "$RUNNER_TEMP/play.json"' EXIT
+          umask 077
+          printf '%s' "$PLAY_JSON_KEY" > "$RUNNER_TEMP/play.json"
           AAB=""
           if [ -f "merkez-zihin-antrenmani.aab" ]; then AAB="--aab merkez-zihin-antrenmani.aab --track ${{ inputs.track }} --release_status completed"; else AAB="--skip_upload_aab true --skip_upload_apk true"; fi
           fastlane supply --package_name com.gamestudio100.merkez_zihin_antrenmani --json_key "$RUNNER_TEMP/play.json" \
