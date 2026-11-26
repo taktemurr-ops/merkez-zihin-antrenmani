@@ -31,5 +31,6 @@ store/
 key.properties
 google-services.json
 GoogleService-Info.plist
+agconnect-services.json
 fastlane/*.json
 fastlane/report.xml

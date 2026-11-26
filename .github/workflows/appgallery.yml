@@ -1,0 +1,61 @@
+# AppGallery Connect'e yükleme (Publishing API): son başarılı CI derlemesinin
+# AppGallery paketi (AAB) ve isteğe bağlı 33 dilde mağaza metinleri.
+# Gerekenler (Settings > Secrets): HUAWEI_CLIENT_ID, HUAWEI_CLIENT_SECRET
+# (AppGallery Connect > Users and permissions > API key, "App manager" rolü)
+# ve HUAWEI_APP_ID_MERKEZ_ZIHIN_ANTRENMANI (uygulamanın AppGallery app ID'si; ya da HUAWEI_APP_ID).
+# Gizli değişkenler yoksa iş temiz biçimde atlanır.
+name: appgallery
+
+on:
+  workflow_dispatch:
+    inputs:
+      listing:
+        description: "33 dilde mağaza metinlerini de güncelle"
+        type: boolean
+        default: true
+      submit:
+        description: "Yüklemeden sonra incelemeye gönder"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HUAWEI_CLIENT_ID: ${{ secrets.HUAWEI_CLIENT_ID }}
+      HUAWEI_CLIENT_SECRET: ${{ secrets.HUAWEI_CLIENT_SECRET }}
+      HUAWEI_APP_ID: ${{ secrets.HUAWEI_APP_ID_MERKEZ_ZIHIN_ANTRENMANI || secrets.HUAWEI_APP_ID }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Gizli değişkenler tanımlı mı
+        id: key
+        run: |
+          if [ -z "$HUAWEI_CLIENT_ID" ] || [ -z "$HUAWEI_CLIENT_SECRET" ] || [ -z "$HUAWEI_APP_ID" ]; then
+            echo "::notice::HUAWEI_CLIENT_ID / HUAWEI_CLIENT_SECRET / HUAWEI_APP_ID_MERKEZ_ZIHIN_ANTRENMANI yok: AppGallery yüklemesi atlandı."
+            echo "ok=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        if: steps.key.outputs.ok == '1'
+        with:
+          python-version: "3.12"
+      - name: Son başarılı CI derlemesinin AppGallery paketi
+        if: steps.key.outputs.ok == '1'
+        run: |
+          RUN=$(gh run list -R ${{ github.repository }} -w ci.yml -b main -s success -L 1 --json databaseId -q '.[0].databaseId')
+          gh run download "$RUN" -R ${{ github.repository }} -n merkez-zihin-antrenmani-huawei -D pkg
+          ls -lR pkg
+      - name: AppGallery Connect'e yükle
+        if: steps.key.outputs.ok == '1'
+        run: |
+          ARGS="--file pkg/out/merkez-zihin-antrenmani-huawei.aab"
+          if [ "${{ inputs.listing }}" = "true" ]; then ARGS="$ARGS --listing"; fi
+          if [ "${{ inputs.submit }}" = "true" ]; then ARGS="$ARGS --submit"; fi
+          python tool/appgallery_publish.py $ARGS

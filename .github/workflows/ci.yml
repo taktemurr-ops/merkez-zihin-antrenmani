@@ -244,3 +244,116 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+
+  # Diğer Android mağazaları (Google hizmetleri olmayan cihazlar dahil).
+  # Mağaza özellikleri studio-core tool/stores.json tablosundan gelir
+  # (tool/store_flavor.py). Yeni mağaza: matrix.store listesine ekleyin.
+  # Çıktı: test sürümünde merkez-zihin-antrenmani<ek>.apk (arm64) ve <ek>-armeabi-v7a.apk,
+  # ayrıca AppGallery'ye yüklenecek AAB/APK yapıtı (merkez-zihin-antrenmani-<mağaza>).
+  stores:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        store: [huawei]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate icons, splash, sounds and store graphics
+        run: |
+          pip install pillow==11.0.0
+          python tool/generate_assets.py
+
+      - name: Store texts for other stores (33 languages)
+        run: python tool/appgallery_publish.py --check
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Release signing key (only when the secrets are set)
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+            {
+              echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/upload.jks"
+              echo "ANDROID_KEYSTORE_PASSWORD=$KS_PASS"
+              echo "ANDROID_KEY_ALIAS=$KEY_ALIAS"
+              echo "ANDROID_KEY_PASSWORD=$KEY_PASS"
+            } >> "$GITHUB_ENV"
+          fi
+
+      - name: Platform folders + store flavor
+        env:
+          ADMOB_APP_ID_ANDROID: ${{ secrets.ADMOB_APP_ID_ANDROID }}
+          HUAWEI_AGCONNECT_JSON: ${{ secrets.HUAWEI_AGCONNECT_JSON }}
+          ADMOB_ANDROID_INTERSTITIAL: ${{ secrets.ADMOB_ANDROID_INTERSTITIAL }}
+          ADMOB_ANDROID_REWARDED: ${{ secrets.ADMOB_ANDROID_REWARDED }}
+          HUAWEI_ADS_INTERSTITIAL: ${{ secrets.HUAWEI_ADS_INTERSTITIAL }}
+          HUAWEI_ADS_REWARDED: ${{ secrets.HUAWEI_ADS_REWARDED }}
+        run: |
+          flutter create --platforms=android,ios,web --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
+          python tool/patch_platforms.py
+          python tool/store_flavor.py ${{ matrix.store }}
+
+      - run: flutter pub get
+
+      - name: App icons and splash screens
+        run: |
+          dart run flutter_launcher_icons
+          dart run flutter_native_splash:create
+
+      - name: Android release APK + App Bundle (${{ matrix.store }})
+        env:
+          FB_PROJECT: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FB_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FB_SENDER: ${{ secrets.FIREBASE_SENDER_ID }}
+          FB_ANDROID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+          FB_WEB: ${{ secrets.FIREBASE_WEB_APP_ID }}
+        run: |
+          DEFS="$STORE_DEFS"
+          if [ -n "$FB_PROJECT" ]; then
+            DEFS="$DEFS --dart-define=FIREBASE_PROJECT_ID=$FB_PROJECT --dart-define=FIREBASE_API_KEY=$FB_KEY --dart-define=FIREBASE_SENDER_ID=$FB_SENDER --dart-define=FIREBASE_ANDROID_APP_ID=$FB_ANDROID --dart-define=FIREBASE_WEB_APP_ID=$FB_WEB"
+          fi
+          BN=$((GITHUB_RUN_NUMBER + 100))
+          for t in "apk --split-per-abi --target-platform android-arm,android-arm64" appbundle; do
+            flutter build $t --release $DEFS --build-number=$BN --obfuscate --split-debug-info=build/symbols/android \
+              || (sleep 90 && flutter build $t --release $DEFS --build-number=$BN --obfuscate --split-debug-info=build/symbols/android) || (sleep 180 && flutter build $t --release $DEFS --build-number=$BN --obfuscate --split-debug-info=build/symbols/android)
+          done
+          mkdir -p out
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "out/merkez-zihin-antrenmani$STORE_SUFFIX.apk"
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "out/merkez-zihin-antrenmani$STORE_SUFFIX-armeabi-v7a.apk"
+          cp build/app/outputs/bundle/release/app-release.aab "out/merkez-zihin-antrenmani$STORE_SUFFIX.aab"
+          ls -l out
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: merkez-zihin-antrenmani-${{ matrix.store }}
+          path: |
+            out/
+            store/appgallery/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish APKs to the "test" release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release view test >/dev/null 2>&1 || gh release create test --prerelease --target "$GITHUB_SHA" --title "Test sürümü" --notes "Her başarılı derlemede güncellenir."
+          gh release upload test "out/merkez-zihin-antrenmani$STORE_SUFFIX.apk" "out/merkez-zihin-antrenmani$STORE_SUFFIX-armeabi-v7a.apk" --clobber
