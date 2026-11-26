@@ -1,0 +1,187 @@
+# TestFlight yayını: imzalı IPA -> App Store Connect (TestFlight), ardından
+# App Store metinleri (31 dil) ve ekran görüntüleri (inceleme gönderimi yok).
+#
+# Gizli değişkenler (biri eksikse iş akışı yeşil olarak atlanır, macOS
+# dakikası harcanmaz):
+#   APPLE_TEAM_ID, APP_STORE_CONNECT_API_KEY_ID, APP_STORE_CONNECT_ISSUER_ID,
+#   APP_STORE_CONNECT_API_KEY_P8 (.p8 içeriği, düz ya da base64),
+#   IOS_DIST_CERT_P12_BASE64, IOS_DIST_CERT_PASSWORD
+# İsteğe bağlı: IOS_PROVISIONING_PROFILE_BASE64 (verilmezse profil API
+# anahtarıyla otomatik oluşturulur), ADMOB_*, FIREBASE_*.
+# Yetenek bayrakları (Settings > Variables): yok.
+# Ayrıntı: CANLI_HAZIRLIK.md.
+name: "Yayın - TestFlight"
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      metadata:
+        description: "App Store metinlerini ve ekran görüntülerini de yükle"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+  HUB: merkez-zihin-antrenmani
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      ok: ${{ steps.g.outputs.ok }}
+      code: ${{ steps.v.outputs.code }}
+      name: ${{ steps.v.outputs.name }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Gizli değişkenler tanımlı mı
+        id: g
+        env:
+          S1: ${{ secrets.APPLE_TEAM_ID }}
+          S2: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          S3: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          S4: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          S5: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          S6: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+        run: |
+          missing=""
+          for n in S1:APPLE_TEAM_ID S2:APP_STORE_CONNECT_API_KEY_ID S3:APP_STORE_CONNECT_ISSUER_ID S4:APP_STORE_CONNECT_API_KEY_P8 S5:IOS_DIST_CERT_P12_BASE64 S6:IOS_DIST_CERT_PASSWORD; do
+            v="${n%%:*}"; [ -n "${!v}" ] || missing="$missing ${n#*:}"
+          done
+          if [ -z "$missing" ]; then
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+            echo "### TestFlight: gizli değişkenler tamam, derleniyor" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "ok=0" >> "$GITHUB_OUTPUT"
+            echo "### TestFlight: atlandı (eksik:$missing)" >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice::Apple gizli değişkenleri yok: TestFlight yayını atlandı."
+          fi
+      - name: Sürüm numarası
+        id: v
+        run: |
+          code=$(( ( $(date -u +%s) - 1704067200 ) / 60 ))
+          name=$(sed -n 's/^version: *\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' pubspec.yaml | head -1)
+          if [[ "$GITHUB_REF" =~ ^refs/tags/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then name="${BASH_REMATCH[1]}"; fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "name=${name:-1.0.0}" >> "$GITHUB_OUTPUT"
+
+  testflight:
+    needs: gate
+    if: needs.gate.outputs.ok == '1'
+    runs-on: macos-latest
+    timeout-minutes: 90
+    env:
+      REPO_ROOT: ${{ github.workspace }}
+      VERSION_CODE: ${{ needs.gate.outputs.code }}
+      VERSION_NAME: ${{ needs.gate.outputs.name }}
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      FASTLANE_HIDE_CHANGELOG: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Simge, açılış ve ses varlıkları
+        run: |
+          pip install pillow==11.0.0
+          python tool/generate_assets.py
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Platform klasörleri
+        env:
+          ADMOB_APP_ID_ANDROID: ${{ secrets.ADMOB_APP_ID_ANDROID }}
+          ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
+        run: |
+          flutter create --platforms=android,ios,web --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
+          python tool/patch_platforms.py
+          grep -q "PRODUCT_BUNDLE_IDENTIFIER = com.gamestudio100.merkezZihinAntrenmani;" ios/Runner.xcodeproj/project.pbxproj \
+            || { echo "::error::iOS paket kimliği beklenen com.gamestudio100.merkezZihinAntrenmani değil"; grep -n "PRODUCT_BUNDLE_IDENTIFIER" ios/Runner.xcodeproj/project.pbxproj; exit 1; }
+      - uses: ruby/setup-ruby@145243922b4465b78e04dd66294782c7de45901f # v1
+        with:
+          ruby-version: "3.3"
+      - run: gem install fastlane xcodeproj -N
+      - name: Yetkilendirmeler (yalnızca açılan yetenekler)
+        env:
+          IOS_NFC: ${{ vars.IOS_NFC }}
+        run: |
+          ENT=ios/Runner/Runner.entitlements
+          PB=/usr/libexec/PlistBuddy
+          if [ -f "$ENT" ] && $PB -c "Print :com.apple.developer.nfc.readersession.formats" "$ENT" >/dev/null 2>&1 && [ "$IOS_NFC" != "1" ]; then
+            $PB -c "Delete :com.apple.developer.nfc.readersession.formats" "$ENT"
+            echo "::notice::NFC yetkisi çıkarıldı (vars.IOS_NFC=1 değil). NFC okuyucu iOS'ta kapalı kalır."
+          fi
+          [ -f "$ENT" ] && cat "$ENT" || echo "Runner.entitlements yok"
+      - run: |
+          flutter pub get
+          dart run flutter_launcher_icons
+          dart run flutter_native_splash:create
+      - name: İmzalı IPA -> TestFlight
+        env:
+          AD_INT: ${{ secrets.ADMOB_IOS_INTERSTITIAL }}
+          AD_REW: ${{ secrets.ADMOB_IOS_REWARDED }}
+          FB_PROJECT: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FB_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FB_SENDER: ${{ secrets.FIREBASE_SENDER_ID }}
+          FB_IOS: ${{ secrets.FIREBASE_IOS_APP_ID }}
+          PV_URL: ${{ secrets.PURCHASE_VERIFY_URL }}
+          # Apple anahtarları yalnızca fastlane adımlarında.
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          DEFS="--dart-define=APP_VERSION=$VERSION_NAME"
+          if [ -n "$FB_PROJECT" ]; then
+            DEFS="$DEFS --dart-define=FIREBASE_PROJECT_ID=$FB_PROJECT --dart-define=FIREBASE_API_KEY=$FB_KEY --dart-define=FIREBASE_SENDER_ID=$FB_SENDER --dart-define=FIREBASE_IOS_APP_ID=$FB_IOS"
+          fi
+          if [ -n "$AD_INT" ]; then DEFS="$DEFS --dart-define=ADMOB_IOS_INTERSTITIAL=$AD_INT"; fi
+          if [ -n "$AD_REW" ]; then DEFS="$DEFS --dart-define=ADMOB_IOS_REWARDED=$AD_REW"; fi
+          if [ -n "$PV_URL" ]; then DEFS="$DEFS --dart-define=PURCHASE_VERIFY_URL=$PV_URL"; fi
+          export IOS_DART_DEFINES="$DEFS"
+          fastlane ios release
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: ${{ env.HUB }}-ios-${{ env.VERSION_NAME }}-${{ env.VERSION_CODE }}
+          path: |
+            build/ios/ipa/*.ipa
+            build/symbols/ios
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: App Store metinleri + ekran görüntüleri
+        if: github.event_name != 'workflow_dispatch' || inputs.metadata
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release download store -R "$GITHUB_REPOSITORY" -p store-graphics.zip -D "$RUNNER_TEMP"; then
+            mkdir -p "$RUNNER_TEMP/sg" && (cd "$RUNNER_TEMP/sg" && unzip -q ../store-graphics.zip)
+            python fastlane/ios_screenshots.py "$RUNNER_TEMP/sg" "$RUNNER_TEMP/ios-shots" \
+              && echo "IOS_SCREENSHOTS=$RUNNER_TEMP/ios-shots" >> "$GITHUB_ENV"
+          else
+            echo "::warning::store-graphics.zip yok: yalnızca metinler yükleniyor."
+          fi
+      - name: deliver (inceleme gönderimi yok)
+        if: github.event_name != 'workflow_dispatch' || inputs.metadata
+        continue-on-error: true
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+        run: fastlane ios metadata || { echo "::warning::App Store metinleri yüklenemedi (TestFlight yüklemesi tamam). Günlüğe bakın."; exit 1; }

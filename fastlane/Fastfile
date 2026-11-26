@@ -1,33 +1,229 @@
-# Release automation (doc: "Yayın otomasyonu - Fastlane").
-# Requires store credentials as environment secrets; see docs/RELEASE.md.
+# Yayın otomasyonu: Google Play (dahili test) ve TestFlight.
+# CI: .github/workflows/play.yml (Android) ve .github/workflows/ios-release.yml (iOS).
+# Gizli değişkenlerin listesi ve elle yapılacak adımlar: CANLI_HAZIRLIK.md.
+#
+# iOS imzası: App Store Connect API anahtarı + tek bir "Apple Distribution"
+# sertifikası (.p12). App ID'ler ve App Store profilleri anahtar ile otomatik
+# oluşturulur/indirilir; uygulama kaydı App Store Connect'te elle açılmalıdır.
+require "base64"
+require "fileutils"
+require "securerandom"
+require "shellwords"
+require "tmpdir"
+
+ANDROID_PACKAGE = "com.gamestudio100.merkez_zihin_antrenmani"
+IOS_BUNDLE_ID = "com.gamestudio100.merkezZihinAntrenmani"
+KEYCHAIN = "gs100-ci"
+
+def repo_root
+  ENV["REPO_ROOT"] || File.expand_path("..", Dir.pwd)
+end
+
+def asc_p8
+  raw = ENV.fetch("APP_STORE_CONNECT_API_KEY_P8").strip
+  raw = Base64.decode64(raw) unless raw.include?("BEGIN")
+  raw.gsub("\\n", "\n")
+end
+
+def asc_key
+  app_store_connect_api_key(
+    key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+    issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+    key_content: asc_p8,
+    duration: 1200,
+    in_house: false
+  )
+end
+
+# Developer portalında App ID yoksa oluşturur, yetkilendirmelerin istediği
+# yetenekleri açar. Bir şey değiştiyse true döner (profil yenilenmeli).
+def ensure_bundle_id(identifier, capabilities)
+  bid = Spaceship::ConnectAPI::BundleId.find(identifier)
+  changed = false
+  unless bid
+    UI.message("App ID oluşturuluyor: #{identifier}")
+    name = "GS100 #{identifier.split('.').last}".gsub(/[^A-Za-z0-9 ]/, " ")[0, 50]
+    bid = Spaceship::ConnectAPI::BundleId.create(name: name, platform: "IOS", identifier: identifier)
+    changed = true
+  end
+  existing = begin
+    bid.get_capabilities
+  rescue StandardError
+    []
+  end
+  capabilities.each do |cap|
+    next if existing.any? { |c| c.is_type?(cap) }
+    begin
+      bid.create_capability(cap)
+      UI.message("#{identifier}: #{cap} yeteneği açıldı")
+      changed = true
+    rescue StandardError => e
+      UI.important("#{identifier}: #{cap} yeteneği açılamadı (#{e.message}). Developer portalından elle açın.")
+    end
+  end
+  changed
+end
+
+def entitlement_capabilities(path)
+  return [] unless path && File.exist?(path)
+  txt = File.read(path)
+  caps = []
+  caps << "NFC_TAG_READING" if txt.include?("com.apple.developer.nfc.readersession.formats")
+  caps << "ACCESS_WIFI_INFORMATION" if txt.include?("com.apple.developer.networking.wifi-info")
+  caps << "APP_GROUPS" if txt.include?("com.apple.security.application-groups")
+  caps
+end
+
+def distribution_identity
+  out = sh("security find-identity -v -p codesigning", log: false)
+  line = out.lines.find { |l| l.include?("Distribution") }
+  UI.user_error!("Anahtar zincirinde dağıtım sertifikası yok: IOS_DIST_CERT_P12_BASE64 bir 'Apple Distribution' .p12 olmalı.") unless line
+  line.include?("iPhone Distribution") ? "iPhone Distribution" : "Apple Distribution"
+end
 
 platform :android do
-  desc "Upload the release App Bundle to the Play Console internal track"
-  lane :internal do
-    sh("cd .. && flutter build appbundle --release")
+  desc "İmzalı AAB'yi Play dahili test kanalına yükler (CI: play.yml)"
+  lane :internal do |options|
+    root = repo_root
+    mapping = File.join(root, "build/app/outputs/mapping/release/mapping.txt")
     upload_to_play_store(
-      track: "internal",
-      aab: "../build/app/outputs/bundle/release/app-release.aab",
-      metadata_path: "./metadata/android",
-      json_key: ENV["PLAY_JSON_KEY"]
+      package_name: ANDROID_PACKAGE,
+      track: options[:track] || "internal",
+      aab: options[:aab] || File.join(root, "build/app/outputs/bundle/release/app-release.aab"),
+      mapping: File.exist?(mapping) ? mapping : nil,
+      metadata_path: File.join(root, "fastlane/metadata/android"),
+      json_key_data: ENV.fetch("PLAY_JSON_KEY")
     )
   end
 
-  desc "Promote internal -> production"
+  desc "Dahili test sürümünü üretime (production) taşır"
   lane :production do
-    upload_to_play_store(track: "internal", track_promote_to: "production", json_key: ENV["PLAY_JSON_KEY"])
+    upload_to_play_store(
+      package_name: ANDROID_PACKAGE,
+      track: "internal",
+      track_promote_to: "production",
+      json_key_data: ENV.fetch("PLAY_JSON_KEY"),
+      skip_upload_metadata: true, skip_upload_images: true, skip_upload_screenshots: true,
+      skip_upload_changelogs: true
+    )
   end
 end
 
 platform :ios do
-  desc "Build and upload to TestFlight"
-  lane :beta do
-    sh("cd .. && flutter build ipa --release")
-    upload_to_testflight(ipa: Dir["../build/ios/ipa/*.ipa"].first, skip_waiting_for_build_processing: true)
+  desc "İmzalı IPA üretir ve TestFlight'a yükler (CI: ios-release.yml)"
+  lane :release do
+    root = repo_root
+    team = ENV.fetch("APPLE_TEAM_ID")
+    key = asc_key
+
+    kc_pass = SecureRandom.hex(16)
+    create_keychain(name: KEYCHAIN, password: kc_pass, default_keychain: true, unlock: true,
+                    timeout: 7200, lock_when_sleeps: false, add_to_search_list: true)
+    p12 = File.join(Dir.tmpdir, "gs100-dist.p12")
+    File.binwrite(p12, Base64.decode64(ENV.fetch("IOS_DIST_CERT_P12_BASE64")))
+    import_certificate(certificate_path: p12, certificate_password: ENV.fetch("IOS_DIST_CERT_PASSWORD"),
+                       keychain_name: KEYCHAIN, keychain_password: kc_pass)
+    FileUtils.rm_f(p12)
+    identity = distribution_identity
+
+    require "xcodeproj"
+    proj_path = File.join(root, "ios/Runner.xcodeproj")
+    proj = Xcodeproj::Project.open(proj_path)
+    targets = proj.native_targets.select { |t| %i[application app_extension].include?(t.symbol_type) }
+    profiles = {}
+    targets.each do |t|
+      settings = t.build_configuration_list["Release"].build_settings
+      bid = settings["PRODUCT_BUNDLE_IDENTIFIER"]
+      UI.user_error!("#{t.name}: PRODUCT_BUNDLE_IDENTIFIER yok") if bid.to_s.empty? || bid.include?("$(")
+      ent = settings["CODE_SIGN_ENTITLEMENTS"]
+      caps = entitlement_capabilities(ent ? File.join(root, "ios", ent) : nil)
+      changed = ensure_bundle_id(bid, caps)
+      override = t.symbol_type == :application ? ENV["IOS_PROVISIONING_PROFILE_BASE64"].to_s : ""
+      if !override.empty?
+        path = File.join(Dir.tmpdir, "#{t.name}.mobileprovision")
+        File.binwrite(path, Base64.decode64(override))
+        install_provisioning_profile(path: path)
+        profiles[bid] = FastlaneCore::ProvisioningProfile.name(path)
+      else
+        get_provisioning_profile(api_key: key, app_identifier: bid, team_id: team, force: changed,
+                                 readonly: false, output_path: Dir.tmpdir, filename: "#{t.name}.mobileprovision")
+        profiles[bid] = lane_context[SharedValues::SIGH_NAME]
+      end
+      update_code_signing_settings(path: proj_path, use_automatic_signing: false, team_id: team,
+                                   targets: [t.name], code_sign_identity: identity,
+                                   profile_name: profiles[bid], bundle_identifier: bid)
+    end
+
+    export = File.join(Dir.tmpdir, "ExportOptions.plist")
+    File.write(export, Plist::Emit.dump({
+      "method" => "app-store",
+      "teamID" => team,
+      "signingStyle" => "manual",
+      "signingCertificate" => identity,
+      "provisioningProfiles" => profiles,
+      "uploadSymbols" => true,
+      "manageAppVersionAndBuildNumber" => false
+    }))
+
+    defines = ENV["IOS_DART_DEFINES"].to_s
+    sh("cd #{root.shellescape} && flutter build ipa --release " \
+       "--build-number=#{ENV.fetch('VERSION_CODE')} --build-name=#{ENV.fetch('VERSION_NAME')} " \
+       "--obfuscate --split-debug-info=build/symbols/ios " \
+       "--export-options-plist=#{export.shellescape} #{defines}")
+    ipa = Dir[File.join(root, "build/ios/ipa/*.ipa")].first
+    UI.user_error!("IPA üretilmedi") unless ipa
+    upload_to_testflight(api_key: key, ipa: ipa, app_identifier: IOS_BUNDLE_ID,
+                         skip_waiting_for_build_processing: true, distribute_external: false)
+  ensure
+    begin
+      delete_keychain(name: KEYCHAIN)
+    rescue StandardError
+      nil
+    end
   end
 
-  desc "Upload metadata and screenshots"
+  desc "App Store metinleri (31 dil) ve ekran görüntüleri (deliver, gönderim yok)"
   lane :metadata do
-    deliver(metadata_path: "./metadata/ios", skip_binary_upload: true, force: true)
+    root = repo_root
+    key = asc_key
+    tmp = Dir.mktmpdir("meta")
+    FileUtils.cp_r(Dir[File.join(root, "fastlane/metadata/ios/*")], tmp)
+    supported = FastlaneCore::Languages::ALL_LANGUAGES
+    keep = %w[review_information trade_representative_contact_information default]
+    Dir[File.join(tmp, "*")].each do |d|
+      next unless File.directory?(d)
+      base = File.basename(d)
+      next if supported.include?(base) || keep.include?(base)
+      UI.important("App Store bu dili desteklemiyor, atlandı: #{base}")
+      FileUtils.rm_rf(d)
+    end
+    app = Spaceship::ConnectAPI::App.find(IOS_BUNDLE_ID)
+    UI.user_error!("App Store Connect'te #{IOS_BUNDLE_ID} uygulaması yok (CANLI_HAZIRLIK.md, adım B3).") unless app
+    live = begin
+      app.get_live_app_store_version
+    rescue StandardError
+      nil
+    end
+    # İlk sürümde "Yenilikler" alanı yazılamaz.
+    FileUtils.rm_f(Dir[File.join(tmp, "*/release_notes.txt")]) unless live
+
+    shots = ENV["IOS_SCREENSHOTS"].to_s
+    has_shots = !shots.empty? && Dir.exist?(shots) && !Dir[File.join(shots, "*/*.png")].empty?
+    deliver(
+      api_key: key,
+      app_identifier: IOS_BUNDLE_ID,
+      app_version: ENV["VERSION_NAME"],
+      metadata_path: tmp,
+      screenshots_path: has_shots ? shots : nil,
+      skip_screenshots: !has_shots,
+      overwrite_screenshots: has_shots,
+      skip_binary_upload: true,
+      skip_app_version_update: false,
+      submit_for_review: false,
+      automatic_release: false,
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
+      force: true
+    )
   end
 end
