@@ -1,70 +1,92 @@
 #!/usr/bin/env python3
-"""Mağaza görsellerinden (store-graphics.zip açılmış hali: <dil>/phone_*.png,
-tablet_*.png) App Store ekran görüntüleri üretir.
+"""store-graphics.zip'ten (açılmış hali) App Store ekran görüntülerini hazırlar.
 
 Kullanım: python fastlane/ios_screenshots.py <sg_klasörü> <çıktı_klasörü>
 
-- iPhone 6.9"/6.7": 1290x2796 (dikey). 1080x1920 görüntü ortalanır, boşluk
-  görüntünün kenar rengiyle doldurulur.
-- iPad 13": 2732x2048 (yatay). 1920x1080 görüntü ortalanır.
-Çıktı: <çıktı>/<App Store dili>/NN_*.png (deliver bu boyutları tanır).
-fastlane/metadata/ios altındaki her dil için, varsa eşleşen görseller kullanılır.
+Yalnız ÇERÇEVESİZ (tam ekran) iOS görselleri kullanılır. Play için üretilen
+genel cihaz çerçeveli phone_*/tablet_* görselleri App Store'a gönderilmez
+(Apple Kural 2.3.3: ekran görüntüsü uygulamanın kendisini göstermeli; Apple
+dışı/genel cihaz çizimi reddedilebilir). Üstteki başlık bandı serbesttir.
+
+Kaynak düzenleri (store-shots iş akışı üretir):
+- oyun merkezleri:      <sg>/<dil>/iosphone_<dil>_N.png, iospad_<dil>_N.png
+- uygulama merkezleri:  <sg>/appstore/<App Store yereli>/N_iphone69.png, N_ipad13.png
+
+Boyutlar (piksel, birebir denetlenir; uymayan görsel hata verir):
+- iPhone 6,9": 1290x2796 (dikey)
+- iPad 13":    2732x2048 (yatay) ya da 2048x2732 (dikey)
+
+Çıktı: <çıktı>/<App Store yereli>/NN_iPhone_69_N.png, NN_iPad_13_N.png
+(deliver cihazı piksel boyutundan tanır). Çerçevesiz görsel yoksa hiçbir şey
+yazılmaz; yalnız metinler yüklenir (store-shots iş akışını çalıştırın).
 """
 import glob
 import os
+import re
 import sys
 
 from PIL import Image
 
-SRC, OUT = sys.argv[1], sys.argv[2]
-META = os.path.join(os.path.dirname(os.path.abspath(__file__)), "metadata", "ios")
+PHONE = {(1290, 2796)}
+IPAD = {(2732, 2048), (2048, 2732)}
 ALIAS = {"no": "nb"}
-PHONE = (1290, 2796)
-IPAD = (2732, 2048)
 
 
-def edge_color(img, top=True):
-    w, h = img.size
-    box = (0, 0, w, 6) if top else (0, h - 6, w, h)
-    strip = img.crop(box).resize((1, 1), Image.LANCZOS)
-    return strip.getpixel((0, 0))
+def num(path):
+    m = re.findall(r"\d+", os.path.basename(path))
+    return int(m[-1]) if m else 0
 
 
-def fit(path, size):
-    img = Image.open(path).convert("RGB")
-    cw, ch = size
-    scale = min(cw / img.width, ch / img.height)
-    nw, nh = round(img.width * scale), round(img.height * scale)
-    img = img.resize((nw, nh), Image.LANCZOS)
-    canvas = Image.new("RGB", size, edge_color(img))
-    x, y = (cw - nw) // 2, (ch - nh) // 2
-    if y > 0:
-        # Alt boşluk alt kenarın rengiyle.
-        canvas.paste(Image.new("RGB", (cw, ch - y - nh), edge_color(img, top=False)), (0, y + nh))
-    canvas.paste(img, (x, y))
-    return canvas
-
-
-n = 0
-for loc in sorted(os.listdir(META)):
-    if not os.path.isdir(os.path.join(META, loc)):
-        continue
+def game_layout(sg, loc):
     code = loc.split("-")[0]
-    src = os.path.join(SRC, ALIAS.get(code, code))
-    if loc == "zh-Hans":
-        src = os.path.join(SRC, "zh")
-    if not os.path.isdir(src):
-        src = os.path.join(SRC, "en")
-    if not os.path.isdir(src):
-        continue
-    dst = os.path.join(OUT, loc)
-    os.makedirs(dst, exist_ok=True)
-    phones = sorted(glob.glob(os.path.join(src, "phone_*.png")))[:10]
-    tablets = sorted(glob.glob(os.path.join(src, "tablet_*.png")))[:10]
-    for i, p in enumerate(phones, 1):
-        fit(p, PHONE).save(os.path.join(dst, f"{i:02d}_iPhone_67_{i}.png"))
-        n += 1
-    for i, p in enumerate(tablets, 1):
-        fit(p, IPAD).save(os.path.join(dst, f"{i:02d}_IPAD_PRO_3GEN_129_{i}.png"))
-        n += 1
-print("ok", n, "screenshots")
+    lang = "zh" if loc.startswith("zh") else ALIAS.get(code, code)
+    for d in (os.path.join(sg, lang), os.path.join(sg, "en")):
+        phones = sorted(glob.glob(os.path.join(d, "iosphone_*.png")), key=num)
+        pads = sorted(glob.glob(os.path.join(d, "iospad_*.png")), key=num)
+        if phones or pads:
+            return phones, pads
+    return [], []
+
+
+def app_layout(sg, loc):
+    for name in (loc, "en-US"):
+        d = os.path.join(sg, "appstore", name)
+        phones = sorted(glob.glob(os.path.join(d, "*_iphone69.png")), key=num)
+        pads = sorted(glob.glob(os.path.join(d, "*_ipad13.png")), key=num)
+        if phones or pads:
+            return phones, pads
+    return [], []
+
+
+def main(sg, out, meta):
+    n, bad = 0, []
+    for loc in sorted(os.listdir(meta)):
+        if not os.path.isdir(os.path.join(meta, loc)):
+            continue
+        phones, pads = app_layout(sg, loc) if os.path.isdir(os.path.join(sg, "appstore")) else game_layout(sg, loc)
+        if not phones and not pads:
+            continue
+        dst = os.path.join(out, loc)
+        os.makedirs(dst, exist_ok=True)
+        for kind, files, sizes, tag in (("iPhone", phones, PHONE, "iPhone_69"), ("iPad", pads, IPAD, "iPad_13")):
+            for i, p in enumerate(files[:10], 1):
+                img = Image.open(p)
+                if img.size not in sizes:
+                    bad.append(f"{p}: {img.size[0]}x{img.size[1]} ({kind} için {' / '.join('%dx%d' % s for s in sorted(sizes))} gerekir)")
+                    continue
+                img.convert("RGB").save(os.path.join(dst, f"{i:02d}_{tag}_{i}.png"), optimize=True)
+                n += 1
+    if bad:
+        print("HATA: boyutu uymayan görseller:\n  " + "\n  ".join(bad))
+        return 2
+    if n == 0:
+        print("::warning::store-graphics.zip içinde çerçevesiz iOS görseli yok "
+              "(store-shots iş akışını yeniden çalıştırın); App Store'a yalnız metinler gönderilir.")
+        return 0
+    print("ok", n, "screenshots")
+    return 0
+
+
+if __name__ == "__main__":
+    META = os.path.join(os.path.dirname(os.path.abspath(__file__)), "metadata", "ios")
+    sys.exit(main(sys.argv[1], sys.argv[2], META))

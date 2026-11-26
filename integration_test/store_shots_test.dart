@@ -104,6 +104,51 @@ Widget _fitCaption(String text, double maxW, double maxH, double size) {
   return Text(text, textAlign: TextAlign.center, maxLines: 2, style: style());
 }
 
+/// App Store görseli: cihaz çerçevesi YOK (Apple 2.3.3). Üstte isteğe bağlı
+/// başlık bandı, altında oyun ekranı kenardan kenara, gerçek iOS mantıksal
+/// boyutunda çizilir.
+Widget _bleedFrame({required Size box, required String caption, required Widget screen, required bool rtl}) {
+  final colors = Palettes.theme(3);
+  final band = (box.height * 0.13).roundToDouble();
+  final screenSize = Size(box.width, box.height - band);
+  return Directionality(
+    textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+    child: Align(
+      alignment: Alignment.topLeft,
+      child: SizedBox(
+        width: box.width,
+        height: box.height,
+        child: Column(children: [
+          Container(
+            width: box.width,
+            height: band,
+            alignment: Alignment.center,
+            padding: EdgeInsets.symmetric(horizontal: box.width * 0.06),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [hub.hubConfig.seedColor, colors.first],
+              ),
+            ),
+            child: _fitCaption(caption, box.width * 0.88, band * 0.86, math.min(box.width, box.height) * 0.064),
+          ),
+          SizedBox(
+            width: screenSize.width,
+            height: screenSize.height,
+            child: ClipRect(
+              child: MediaQuery(
+                data: MediaQueryData(size: screenSize, devicePixelRatio: 3, padding: EdgeInsets.zero),
+                child: screen,
+              ),
+            ),
+          ),
+        ]),
+      ),
+    ),
+  );
+}
+
 Widget _storeFrame({required Size box, required Size device, required String caption, required Widget screen, required bool rtl}) {
   final colors = Palettes.theme(3);
   return Directionality(
@@ -267,8 +312,15 @@ void main() {
 
   testWidgets('mağaza görselleri', (tester) async {
     await tester.pumpAndSettle();
-    // Telefon 1080×1920 (9:16), tablet 1920×1080 (16:9), öne çıkan 1024×500.
-    const phoneBox = Size(360, 640), tabletBox = Size(1280, 720);
+    // Play: telefon 1080×1920 (9:16), tablet 1920×1080 (16:9), öne çıkan 1024×500
+    // (başlıklı, genel cihaz çerçeveli). App Store: iPhone 6,9" 1290×2796 ve
+    // iPad 13" 2732×2048, çerçevesiz tam ekran (iosphone_/iospad_).
+    const kinds = <(String, Size, Size, double, bool)>[
+      ('phone', Size(360, 640), Size(400, 800), 3, false),
+      ('tablet', Size(1280, 720), Size(1000, 620), 1.5, false),
+      ('iosphone', Size(430, 932), Size.zero, 3, true),
+      ('iospad', Size(1366, 1024), Size.zero, 2, true),
+    ];
     const only = String.fromEnvironment('LANGS');
     final langs = only.isEmpty ? Strings.languages : only.split(',');
     final games = {for (final g in hub.hubConfig.allGames) g.gameId: g};
@@ -276,9 +328,7 @@ void main() {
     var count = 0;
     for (final lang in langs) {
       final li = Strings.languages.indexOf(lang);
-      for (final tablet in [false, true]) {
-        final box = tablet ? tabletBox : phoneBox;
-        final device = tablet ? const Size(1000, 620) : const Size(400, 800);
+      for (final (kind, box, device, ratio, bleed) in kinds) {
         for (var k = 0; k < _shots.length; k++) {
           final shot = _shots[k];
           final cfg = games[shot.gameId]!;
@@ -288,19 +338,26 @@ void main() {
             lang,
             _offscreen(
               box,
-              _storeFrame(
-                box: box,
-                device: device,
-                caption: storeCaptions[k][li],
-                rtl: Strings(lang).rtl,
-                screen: KeyedSubtree(key: ValueKey('${shot.gameId}-$lang-$tablet'), child: _gameScreen(cfg, g, shot.resume(g), lang)),
-              ),
+              bleed
+                  ? _bleedFrame(
+                      box: box,
+                      caption: storeCaptions[k][li],
+                      rtl: Strings(lang).rtl,
+                      screen: KeyedSubtree(key: ValueKey('${shot.gameId}-$lang-$kind'), child: _gameScreen(cfg, g, shot.resume(g), lang)),
+                    )
+                  : _storeFrame(
+                      box: box,
+                      device: device,
+                      caption: storeCaptions[k][li],
+                      rtl: Strings(lang).rtl,
+                      screen: KeyedSubtree(key: ValueKey('${shot.gameId}-$lang-$kind'), child: _gameScreen(cfg, g, shot.resume(g), lang)),
+                    ),
             ),
           ));
           for (var i = 0; i < 8; i++) {
             await tester.pump(const Duration(milliseconds: 150));
           }
-          await _capture(tester, tablet ? 1.5 : 3, '${tablet ? 'tablet' : 'phone'}_${lang}_${k + 1}');
+          await _capture(tester, ratio, '${kind}_${lang}_${k + 1}');
           count++;
         }
       }
@@ -312,5 +369,5 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     }
     binding.reportData = {'count': count};
-  }, timeout: const Timeout(Duration(minutes: 30)));
+  }, timeout: const Timeout(Duration(minutes: 55)));
 }
