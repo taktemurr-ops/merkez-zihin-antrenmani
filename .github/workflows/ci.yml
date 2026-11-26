@@ -109,10 +109,14 @@ jobs:
           # One retry: Gradle plugin/Maven mirrors occasionally fail to resolve.
           # Play her yüklemede daha büyük bir sürüm kodu ister: derleme sırasından türetilir.
           BN=$((GITHUB_RUN_NUMBER + 100))
-          for t in apk appbundle; do
+          # Play'e giden paket AAB'dir (Play her cihaza yalnızca kendi ABI'sini
+          # indirir). Test APK'sı ABI başına ayrı üretilir: arm64-v8a (güncel
+          # telefonlar) ve armeabi-v7a (eski 32 bit telefonlar).
+          for t in "apk --split-per-abi --target-platform android-arm,android-arm64" appbundle; do
             flutter build $t --release $DEFS --build-number=$BN --obfuscate --split-debug-info=build/symbols/android \
               || (sleep 90 && flutter build $t --release $DEFS --build-number=$BN --obfuscate --split-debug-info=build/symbols/android) || (sleep 180 && flutter build $t --release $DEFS --build-number=$BN --obfuscate --split-debug-info=build/symbols/android)
           done
+          ls -l build/app/outputs/flutter-apk/*.apk build/app/outputs/bundle/release/*.aab
 
       - name: Web build (also published on GitHub Pages for device testing)
         run: flutter build web --release $FB_DEFS --base-href "/merkez-zihin-antrenmani/"
@@ -127,7 +131,8 @@ jobs:
         with:
           name: merkez-zihin-antrenmani-android
           path: |
-            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
             build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 14
@@ -171,9 +176,12 @@ jobs:
           GH_REPO: ${{ github.repository }}
           SIGNED: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && '1' || '' }}
         run: |
-          cp flutter-apk/app-release.apk merkez-zihin-antrenmani.apk 2>/dev/null || cp $(find . -name app-release.apk | head -1) merkez-zihin-antrenmani.apk
+          # merkez-zihin-antrenmani.apk = arm64-v8a (bağlantı aynı kalır); eski 32 bit
+          # telefonlar için ayrıca -armeabi-v7a.apk.
+          cp $(find . -name app-arm64-v8a-release.apk | head -1) merkez-zihin-antrenmani.apk
+          cp $(find . -name app-armeabi-v7a-release.apk | head -1) merkez-zihin-antrenmani-armeabi-v7a.apk
           gh release view test >/dev/null 2>&1 || gh release create test --prerelease --target "$GITHUB_SHA" --title "Test sürümü" --notes "Her başarılı derlemede güncellenir."
-          gh release upload test merkez-zihin-antrenmani.apk --clobber
+          gh release upload test merkez-zihin-antrenmani.apk merkez-zihin-antrenmani-armeabi-v7a.apk --clobber
           # İmza anahtarı tanımlıysa Play'e yüklenecek paket (AAB) de aynı sürüme konur.
           if [ -n "$SIGNED" ]; then
             cp $(find . -name app-release.aab | head -1) merkez-zihin-antrenmani.aab
