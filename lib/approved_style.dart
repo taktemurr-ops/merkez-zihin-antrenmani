@@ -10,7 +10,7 @@ const approvedStyle = ApprovedHubStyle(
   number: Color(0xFF3FE0FF),
   heroAsset: 'assets/approved/hero.png',
   heroTitle: true,
-  blocks: [ApprovedBlock.dailyChallenge, ApprovedBlock.brainStats, ApprovedBlock.featured],
+  blocks: [ApprovedBlock.dailyChallenge, ApprovedBlock.globalDaily, ApprovedBlock.brainStats, ApprovedBlock.featured],
   featuredKey: 'featured',
   featured: ['oyun-hafiza-dizisi', 'oyun-schulte-tablosu', 'oyun-oruntu-tamamlama', 'oyun-tepki-ve-odak'],
   tileArt: {

@@ -13,80 +13,80 @@ dependencies:
   studio_core:
     git:
       url: https://github.com/taktemurr-ops/studio-core
-      ref: af82ca8814c5123a77f7b20744e18adcb47c874e
+      ref: 27330cd30b8fbedd4d33cf8cb781cd3bb8376dd8
   # Merkezdeki oyunlar (her biri kendi deposunda)
   oyun_gunluk_beyin_egzersizi_programi:
     git:
       url: https://github.com/taktemurr-ops/oyun-gunluk-beyin-egzersizi-programi
-      ref: c07f347e010f891991b10cfea90944c515e886f6
+      ref: 58fd118a0605c142c355a07c1cf9852752fc61a1
   oyun_hafiza_dizisi:
     git:
       url: https://github.com/taktemurr-ops/oyun-hafiza-dizisi
-      ref: 53b0b140be5d921c40cc778903bb73cc8cb2333d
+      ref: 04451ef39e5482dc00e327c3e6b9dd9c1d39807b
   oyun_gorsel_hafiza_izgarasi:
     git:
       url: https://github.com/taktemurr-ops/oyun-gorsel-hafiza-izgarasi
-      ref: 9a28ab4dd3c5205d91cfa8e9529d4bfff4565c9f
+      ref: 55b4f5f868b9bf5426e9190590a030e35994aac8
   oyun_n_geri:
     git:
       url: https://github.com/taktemurr-ops/oyun-n-geri
-      ref: c9393052869bef35579fb0ae75ed9d4b3484452c
+      ref: 78080b03c8987cb5aa9b27acdd4e556c7a5038f0
   oyun_yuz_ve_isim:
     git:
       url: https://github.com/taktemurr-ops/oyun-yuz-ve-isim
-      ref: 7e907b87945cae9a1eade79b6a6de7a34bd3f35e
+      ref: c7c5703b32f723f0b126d92c7e3bf185310dd3ef
   oyun_stroop_testi:
     git:
       url: https://github.com/taktemurr-ops/oyun-stroop-testi
-      ref: 9c5fc9303eaa8141a9f2c2e095d3c5d445bf02e0
+      ref: 6fd72318ed0db96b359aa8c8f7da26ab14e29fea
   oyun_schulte_tablosu:
     git:
       url: https://github.com/taktemurr-ops/oyun-schulte-tablosu
-      ref: 63a4155333ce8a7154674a9d29ead0fe2eee96a4
+      ref: e1a84aa59f13dc9745cbd27eb757ec87b72c2d36
   oyun_tepki_ve_odak:
     git:
       url: https://github.com/taktemurr-ops/oyun-tepki-ve-odak
-      ref: 6e791d747ce44d6c08edf36a3bce8ed30fce6020
+      ref: 523b7f4dff63faf98fcb3cff964444bf33aaea9c
   oyun_hizli_hesap:
     git:
       url: https://github.com/taktemurr-ops/oyun-hizli-hesap
-      ref: 46f15de0f4361a82064c1ea0504eb87ba5b9a57e
+      ref: 47ae34543f8cf6354f8970cc0f6422c13f669b08
   oyun_cift_gorev:
     git:
       url: https://github.com/taktemurr-ops/oyun-cift-gorev
-      ref: 80c104170083968cb85073015ee02cadf5292b78
+      ref: 55a2899e693222f864c181d81f831267870af15f
   oyun_rakam_dizisi:
     git:
       url: https://github.com/taktemurr-ops/oyun-rakam-dizisi
-      ref: e7fad1c966c434b26bc4b0450aca6facb97a57a6
+      ref: 236f1ee2c4cc0cf2217d01fa010cf1c061c4a73d
   oyun_gorsel_arama:
     git:
       url: https://github.com/taktemurr-ops/oyun-gorsel-arama
-      ref: ccef9f6ca81b5018c4f0698a1197233251918f11
+      ref: 52a13b52779cb8fd0943e05711901fec468bc4ed
   oyun_kelime_hafizasi:
     git:
       url: https://github.com/taktemurr-ops/oyun-kelime-hafizasi
-      ref: c7dae50fd81826c92d8a90304f8aca5d9c48a88e
+      ref: e5ca91f96a3c84358f09795b1b828eb787d12eb9
   oyun_oruntu_tamamlama:
     git:
       url: https://github.com/taktemurr-ops/oyun-oruntu-tamamlama
-      ref: 187d75ae4442ae10f2ff0bc93e72bc9f8a2b42a2
+      ref: 761127fc1dda8c6eb8a154c066f0585748ce2d71
   oyun_uzamsal_dondurme:
     git:
       url: https://github.com/taktemurr-ops/oyun-uzamsal-dondurme
-      ref: eaf45c54079995be258a514081062a6c6cab5fdd
+      ref: 60810ae8b173e17f6f3346e5d9f802a52c9bbba6
   oyun_kestirme_ustasi:
     git:
       url: https://github.com/taktemurr-ops/oyun-kestirme-ustasi
-      ref: bff56b394298a0484a0685cf620076c5fdec780c
+      ref: 48a3a7a19b579cf4d770b563cff0cb7bcbfad7db
   oyun_iz_surme:
     git:
       url: https://github.com/taktemurr-ops/oyun-iz-surme
-      ref: e261564da78a3f1509b85761aef6c016dd0cee04
+      ref: ab884f46640dc471e8a6118fed0dec360240ebb8
   oyun_ok_yonu:
     git:
       url: https://github.com/taktemurr-ops/oyun-ok-yonu
-      ref: 07094aeb72fac16a191ca20350d74aa09d5ffe61
+      ref: e8fc497a8fa88c6797b1ecf8e7c2881f5383fa42
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^2.6.1
@@ -100,11 +100,11 @@ dependency_overrides:
   studio_core:
     git:
       url: https://github.com/taktemurr-ops/studio-core
-      ref: af82ca8814c5123a77f7b20744e18adcb47c874e
+      ref: 27330cd30b8fbedd4d33cf8cb781cd3bb8376dd8
   zihin_motoru:
     git:
       url: https://github.com/taktemurr-ops/zihin-motoru
-      ref: c95311f0461c3eebc29cb1b817521214b20089b5
+      ref: 2307d022a094a2015edf4b2512a1859857fd2603
 
 dev_dependencies:
   flutter_test:
