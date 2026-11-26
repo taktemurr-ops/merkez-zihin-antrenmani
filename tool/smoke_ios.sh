@@ -18,6 +18,17 @@ status=0
 DIAG="$HOME/Library/Logs/DiagnosticReports"
 running() { xcrun simctl spawn "$1" launchctl list | grep -q "$BID"; }
 crash_reports() { ls -t "$DIAG" 2>/dev/null | grep -E "^($EXE|Runner)[-_.]" || true; }
+# En küçük desteklenen iPhone (SE 3. nesil) varsayılan simülatörlerde yoksa,
+# kurulu en yeni iOS çalışma ortamıyla oluşturulur.
+if [[ "$PATTERNS" == *"iPhone SE"* ]] && ! xcrun simctl list devices available | grep -qE "^[[:space:]]+iPhone SE"; then
+  DT=$(xcrun simctl list devicetypes | grep -E "^iPhone SE \(3rd generation\)" | grep -oE "com\.apple\.CoreSimulator\.SimDeviceType\.[A-Za-z0-9-]+" | head -1)
+  RT=$(xcrun simctl list runtimes available | grep -E "^iOS" | tail -1 | grep -oE "com\.apple\.CoreSimulator\.SimRuntime\.[A-Za-z0-9-]+")
+  if [ -n "$DT" ] && [ -n "$RT" ]; then
+    xcrun simctl create "iPhone SE (3rd generation)" "$DT" "$RT" && echo "iPhone SE (3rd generation) oluşturuldu ($RT)"
+  else
+    echo "::notice::iPhone SE (3rd generation) aygıt türü bu Xcode'da yok"
+  fi
+fi
 IFS='|' read -ra PATS <<< "$PATTERNS"
 for PAT in "${PATS[@]}"; do
   UDID=""

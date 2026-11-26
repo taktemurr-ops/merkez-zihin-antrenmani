@@ -119,8 +119,8 @@ void checkLayout(WidgetTester tester, LayoutIssues issues, ErrorTrap trap, Strin
     if (e.contains('MissingPluginException') || e.contains('No implementation found')) continue;
     issues.add(screen, combo, e.contains('overflowed') ? 'tasma' : 'hata', e);
   }
-  final view = tester.view;
-  final screenRect = Offset.zero & (view.physicalSize / view.devicePixelRatio);
+  // Kök görünümün mantıksal boyutu (cihazda da gerçek ekran boyutu).
+  final screenRect = Offset.zero & tester.binding.renderViews.first.size;
 
   // Kesilen metin: satır sınırını aşıp kırpılan ya da kutusuna sığmayan yazı.
   for (final el in find.byType(RichText).evaluate()) {
