@@ -100,11 +100,11 @@ dependency_overrides:
   studio_core:
     git:
       url: https://github.com/taktemurr-ops/studio-core
-      ref: 7e2e219a0cb2b9dc1d1b3e8f03cace0347001b10
+      ref: 4c60cae1c80dbec1f4bcd2a559ebf2dbddb8dd01
   zihin_motoru:
     git:
       url: https://github.com/taktemurr-ops/zihin-motoru
-      ref: 2307d022a094a2015edf4b2512a1859857fd2603
+      ref: 3c83f74294d0548cbc16c9a709901f9ef5090a58
 
 dev_dependencies:
   flutter_test:
