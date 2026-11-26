@@ -53,14 +53,41 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Run on emulator (${{ matrix.profile }})
+        id: emu1
+        continue-on-error: true
+        timeout-minutes: 15
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
           target: google_apis
           arch: x86_64
           profile: ${{ matrix.profile }}
+          ram-size: 4096M
+          heap-size: 576M
+          disk-size: 6G
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -feature -Vulkan
           disable-animations: true
           script: bash tool/smoke_android.sh ${{ matrix.profile }}
+      # Altyapı kaynaklı (adb offline / emülatör çöktü) aksaklıklara karşı
+      # temiz bir emülatörde (Vulkan açık, varsayılan grafik yolu) bir kez daha;
+      # gerçek çökme iki denemede de düşer.
+      - name: Retry on a fresh emulator (${{ matrix.profile }})
+        if: steps.emu1.outcome == 'failure'
+        timeout-minutes: 15
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: ${{ matrix.profile }}
+          ram-size: 4096M
+          heap-size: 576M
+          disk-size: 6G
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash tool/smoke_android.sh ${{ matrix.profile }}-retry
       - uses: actions/upload-artifact@v4
         if: always()
         with:
