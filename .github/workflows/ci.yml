@@ -82,7 +82,7 @@ jobs:
         run: flutter analyze --no-fatal-infos
 
       - name: Unit, rule, save and 24-month simulation tests
-        run: flutter test --reporter expanded
+        run: flutter test --exclude-tags boyut --reporter expanded
 
       - name: Android release APK + App Bundle
         env:

@@ -1,0 +1,53 @@
+name: Screen sizes (320x568 .. 1280x800, large text, RTL)
+
+# Ekran boyutları: merkez ekranları ve her oyunun/aracın açılış ekranı
+# 320x568'den 1280x800 yatay tablete, büyük yazı (1.3x) ve sağdan sola dilde:
+# taşma, kesik metin, ekran dışında kalan düğme olmamalı.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sizes-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+
+jobs:
+  screen-sizes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install pillow==11.0.0
+          python tool/generate_assets.py
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Screen size, large text and RTL layout tests
+        run: |
+          set -o pipefail
+          flutter test --tags boyut --reporter expanded 2>&1 | tee sizes.log
+      - name: Summary
+        if: always()
+        run: |
+          grep -E "^(BOYUT|SORUN)" sizes.log | head -300 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screen-sizes-log
+          path: sizes.log
+          retention-days: 14

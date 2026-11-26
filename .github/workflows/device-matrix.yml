@@ -1,0 +1,175 @@
+name: Device matrix (Android API 24-36 phone/foldable/tablet, iPhone SE / Pro Max / iPad)
+
+# Geniş cihaz matrisi: her itmede değil (device-smoke.yml 2 profille koşar),
+# elle ve haftada bir. Uygulama bir kez derlenir; her emülatör aynı APK'yı
+# kurar, açar, döndürür, arka plana alır, Arapçaya (sağdan sola) geçer,
+# rastgele dokunur; uygulama merkezlerinde ayrıca cihazda araç gezintisi
+# testi koşar. Her adımın ekran görüntüsü artifact olarak saklanır.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 3 * * 0" # haftada bir, Pazar 03:41 UTC
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matrix-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install pillow==11.0.0
+          python tool/generate_assets.py
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: |
+          flutter create --platforms=android,ios,web --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
+          python tool/patch_platforms.py
+          flutter pub get
+          dart run flutter_launcher_icons
+          dart run flutter_native_splash:create
+      - name: Build release APK
+        run: flutter build apk --release || (sleep 90 && flutter build apk --release) || (sleep 180 && flutter build apk --release)
+      - name: Build on-device test APK (app hubs)
+        run: |
+          if [ -f integration_test/device_smoke_test.dart ]; then
+            T="-t integration_test/device_smoke_test.dart"
+            flutter build apk --debug $T || (sleep 90 && flutter build apk --debug $T)
+          fi
+      - run: grep -hm1 'applicationId' android/app/build.gradle* | sed -E 's/.*"([^"]+)".*/\1/' > smoke-pkg.txt && cat smoke-pkg.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apks
+          path: |
+            smoke-pkg.txt
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: warn
+          retention-days: 3
+
+  android:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # name: rapor adı; wm: ekranı küçültmek için wm size@density
+          - { name: api24-kucuk-telefon-360x640, api: 24, profile: pixel_3a, wm: "720x1280@320" }
+          - { name: api26-en-kucuk-320x568, api: 26, profile: pixel_3a, wm: "640x1136@320" }
+          - { name: api29-pixel_3a, api: 29, profile: pixel_3a, wm: "" }
+          - { name: api31-buyuk-telefon-pixel_7_pro, api: 31, profile: pixel_7_pro, wm: "" }
+          - { name: api33-katlanabilir-pixel_fold, api: 33, profile: pixel_fold, wm: "" }
+          - { name: api34-pixel_7, api: 34, profile: pixel_7, wm: "" }
+          - { name: api34-tablet-pixel_tablet, api: 34, profile: pixel_tablet, wm: "" }
+          - { name: api35-pixel_7, api: 35, profile: pixel_7, wm: "" }
+          - { name: api36-pixel_7_pro, api: 36, profile: pixel_7_pro, wm: "" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: apks
+          path: .
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          free -m
+      - name: Run on emulator (${{ matrix.name }})
+        id: emu1
+        continue-on-error: true
+        timeout-minutes: 30
+        env:
+          SMOKE_WM: ${{ matrix.wm }}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: google_apis
+          arch: x86_64
+          profile: ${{ matrix.profile }}
+          cores: 3
+          ram-size: 3072M
+          heap-size: 576M
+          disk-size: 6G
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -feature -Vulkan
+          disable-animations: true
+          script: bash tool/smoke_android.sh ${{ matrix.name }}
+      # Altyapı kaynaklı (adb offline / emülatör çöktü) aksaklıklara karşı
+      # temiz bir emülatörde bir kez daha; gerçek çökme iki denemede de düşer.
+      - name: Retry on a fresh emulator (${{ matrix.name }})
+        if: steps.emu1.outcome == 'failure'
+        timeout-minutes: 30
+        env:
+          SMOKE_WM: ${{ matrix.wm }}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: google_apis
+          arch: x86_64
+          profile: ${{ matrix.profile }}
+          cores: 3
+          ram-size: 3072M
+          heap-size: 576M
+          disk-size: 6G
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash tool/smoke_android.sh ${{ matrix.name }}-retry
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: merkez-zihin-antrenmani-matrix-${{ matrix.name }}
+          path: smoke/
+          retention-days: 14
+
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install pillow==11.0.0
+          python tool/generate_assets.py
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: |
+          flutter create --platforms=android,ios,web --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
+          python tool/patch_platforms.py
+          flutter pub get
+          dart run flutter_launcher_icons
+          dart run flutter_native_splash:create
+      - name: Build for simulator
+        run: flutter build ios --simulator --debug
+      # En küçük desteklenen iPhone (SE 3. nesil; yoksa 16e), büyük iPhone, iPad.
+      - name: Run on iPhone SE, large iPhone and iPad simulators
+        run: bash tool/smoke_ios.sh "iPhone SE~iPhone 16e~iPhone 1|iPhone 1[0-9] Pro Max~iPhone 1[0-9] Plus~iPhone 1|iPad Pro 13~iPad Air 13~iPad"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: merkez-zihin-antrenmani-matrix-ios
+          path: smoke/
+          retention-days: 14

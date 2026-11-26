@@ -1,8 +1,12 @@
 name: Device smoke test (Android phone + tablet emulator, iPhone + iPad simulator)
 
-# Installs the real app on emulators/simulators, launches it, drives the UI
-# with random taps (Android monkey) and fails on crashes (FATAL EXCEPTION /
-# ANR) or if the app is no longer running. Screenshots are kept as artifacts.
+# Installs the real app on emulators/simulators, launches it, rotates it,
+# sends it to the background and back, switches to Arabic (right-to-left),
+# drives the UI with random taps (Android monkey) and, for app hubs, runs an
+# on-device test that opens tools from every category. Fails on crashes /
+# ANR of our package or layout errors. Screenshots of every step are kept.
+# The wide device matrix (API 24-36, foldable, tablet, iPhone SE, iPad) is in
+# device-matrix.yml (manual + weekly).
 on:
   push:
     branches: [main]
@@ -21,7 +25,7 @@ env:
 jobs:
   android:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 80
     strategy:
       fail-fast: false
       matrix:
@@ -47,6 +51,12 @@ jobs:
           dart run flutter_native_splash:create
       - name: Build release APK
         run: flutter build apk --release || (sleep 90 && flutter build apk --release) || (sleep 180 && flutter build apk --release)
+      - name: Build on-device test APK (app hubs)
+        run: |
+          if [ -f integration_test/device_smoke_test.dart ]; then
+            T="-t integration_test/device_smoke_test.dart"
+            flutter build apk --debug $T || (sleep 90 && flutter build apk --debug $T)
+          fi
       # Emülatöre yer açmak için derlemeden kalan Gradle/Kotlin süreçleri durdurulur
       # (ana makinede bellek yetmezse emülatör sessizce öldürülüyor).
       - name: Free host memory for the emulator
@@ -63,7 +73,7 @@ jobs:
       - name: Run on emulator (${{ matrix.profile }})
         id: emu1
         continue-on-error: true
-        timeout-minutes: 15
+        timeout-minutes: 30
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -83,7 +93,7 @@ jobs:
       # gerçek çökme iki denemede de düşer.
       - name: Retry on a fresh emulator (${{ matrix.profile }})
         if: steps.emu1.outcome == 'failure'
-        timeout-minutes: 15
+        timeout-minutes: 30
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -130,7 +140,7 @@ jobs:
       - name: Build for simulator
         run: flutter build ios --simulator --debug
       - name: Run on iPhone and iPad simulators
-        run: bash tool/smoke_ios.sh
+        run: bash tool/smoke_ios.sh "iPhone|iPad"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
