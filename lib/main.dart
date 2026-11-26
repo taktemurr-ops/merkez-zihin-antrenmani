@@ -5,8 +5,11 @@ import 'package:oyun_gorsel_hafiza_izgarasi/oyun_gorsel_hafiza_izgarasi.dart';
 import 'package:oyun_gunluk_beyin_egzersizi_programi/oyun_gunluk_beyin_egzersizi_programi.dart';
 import 'package:oyun_hafiza_dizisi/oyun_hafiza_dizisi.dart';
 import 'package:oyun_hizli_hesap/oyun_hizli_hesap.dart';
+import 'package:oyun_iz_surme/oyun_iz_surme.dart';
 import 'package:oyun_kelime_hafizasi/oyun_kelime_hafizasi.dart';
+import 'package:oyun_kestirme_ustasi/oyun_kestirme_ustasi.dart';
 import 'package:oyun_n_geri/oyun_n_geri.dart';
+import 'package:oyun_ok_yonu/oyun_ok_yonu.dart';
 import 'package:oyun_oruntu_tamamlama/oyun_oruntu_tamamlama.dart';
 import 'package:oyun_rakam_dizisi/oyun_rakam_dizisi.dart';
 import 'package:oyun_schulte_tablosu/oyun_schulte_tablosu.dart';
@@ -111,6 +114,9 @@ final hubConfig = HubConfig(
     gorselAramaConfig,
     oruntuConfig,
     dondurmeConfig,
+    kestirmeConfig,
+    izSurmeConfig,
+    okYonuConfig,
   ],
   starters: ['oyun-gunluk-beyin-egzersizi-programi', 'oyun-hafiza-dizisi', 'oyun-stroop-testi'],
   covers: const {
@@ -129,6 +135,9 @@ final hubConfig = HubConfig(
     'oyun-tepki-ve-odak': GameCover('reflex'),
     'oyun-uzamsal-dondurme': GameCover('rotate', v: 1),
     'oyun-yuz-ve-isim': GameCover('facename'),
+    'oyun-kestirme-ustasi': GameCover('estimc'),
+    'oyun-iz-surme': GameCover('trailmkc'),
+    'oyun-ok-yonu': GameCover('flankc'),
   },
   defaultCover: const GameCover('pads', v: 1),
   sections: [
@@ -242,7 +251,7 @@ final hubConfig = HubConfig(
           'Chú ý và tốc độ',
           'Atensyon at bilis',
         ],
-        ids: ['oyun-stroop-testi', 'oyun-schulte-tablosu', 'oyun-tepki-ve-odak', 'oyun-hizli-hesap', 'oyun-cift-gorev', 'oyun-gorsel-arama']),
+        ids: ['oyun-stroop-testi', 'oyun-schulte-tablosu', 'oyun-tepki-ve-odak', 'oyun-hizli-hesap', 'oyun-cift-gorev', 'oyun-gorsel-arama', 'oyun-iz-surme', 'oyun-ok-yonu']),
     HubSection(
         title: [
           'Mantık ve uzam',
@@ -279,7 +288,7 @@ final hubConfig = HubConfig(
           'Logic và không gian',
           'Lohika at espasyo',
         ],
-        ids: ['oyun-oruntu-tamamlama', 'oyun-uzamsal-dondurme']),
+        ids: ['oyun-oruntu-tamamlama', 'oyun-uzamsal-dondurme', 'oyun-kestirme-ustasi']),
   ],
 );
 

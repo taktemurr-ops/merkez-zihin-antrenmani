@@ -1,9 +1,9 @@
-Brain Training brings 12 short brain exercises together in one app with our own original design: memory, attention and speed, logic and spatial thinking. Each exercise keeps its own progress, missions and achievements; the Daily Brain Plan serves three different exercises every day. The exercises are for fun and practice and make no medical claims.
+Brain Training brings 18 short brain exercises together in one app with our own original design: memory, attention and speed, logic and spatial thinking. Each exercise keeps its own progress, missions and achievements; the Daily Brain Plan serves three different exercises every day. The exercises are for fun and practice and make no medical claims.
 
 • Every day: Daily Brain Plan
-• Memory: Color Sequence, Visual Memory, N-Back, Faces and Names
-• Attention and speed: Color or Word, Number Table, Reflex and Focus, Quick Math, Double Duty
-• Logic and space: Pattern Finish, Spatial Rotation
+• Memory: Color Sequence, Visual Memory, N-Back, Faces and Names, Digit Span, Word Memory
+• Attention and speed: Color or Word, Number Table, Reflex and Focus, Quick Math, Double Duty, Visual Search, Trail Tracer, Arrow Focus
+• Logic and space: Pattern Finish, Spatial Rotation, Estimation Master
 
 Highlights
 • 100,000 levels per exercise; sequence length, grid size and pace grow step by step, and every level is checked against its rules.

@@ -1,9 +1,9 @@
-Hjernetræning samler 12 korte hjerneøvelser i én app med eget design: hukommelse, opmærksomhed og fart, logik og rumsans. Hver øvelse har egne fremskridt, missioner og bedrifter; Daglig Hjerneplan giver tre forskellige øvelser hver dag. Øvelserne er til sjov og træning og fremsætter ingen medicinske påstande.
+Hjernetræning samler 18 korte hjerneøvelser i én app med eget design: hukommelse, opmærksomhed og fart, logik og rumsans. Hver øvelse har egne fremskridt, missioner og bedrifter; Daglig Hjerneplan giver tre forskellige øvelser hver dag. Øvelserne er til sjov og træning og fremsætter ingen medicinske påstande.
 
 • Hver dag: Daglig Hjerneplan
-• Hukommelse: Farvefølge, Visuel Hukommelse, N-Tilbage, Ansigter og Navne
-• Opmærksomhed og fart: Farve eller Ord, Taltabel, Reaktion og Fokus, Hurtig Regning, Dobbeltopgave
-• Logik og rum: Fuldend Mønstret, Rumlig Rotation
+• Hukommelse: Farvefølge, Visuel Hukommelse, N-Tilbage, Ansigter og Navne, Talrække, Ordhukommelse
+• Opmærksomhed og fart: Farve eller Ord, Taltabel, Reaktion og Fokus, Hurtig Regning, Dobbeltopgave, Visuel Søgning, Sporfinder, Pilfokus
+• Logik og rum: Fuldend Mønstret, Rumlig Rotation, Mester i Skøn
 
 Højdepunkter
 • 100.000 baner pr. øvelse; længde, gitter og tempo vokser gradvist, hver bane kontrolleres.

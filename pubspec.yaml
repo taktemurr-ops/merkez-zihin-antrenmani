@@ -13,7 +13,7 @@ dependencies:
   studio_core:
     git:
       url: https://github.com/taktemurr-ops/studio-core
-      ref: 5eedc912719ebc306e3cd9e5e9b251efe4399105
+      ref: af82ca8814c5123a77f7b20744e18adcb47c874e
   # Merkezdeki oyunlar (her biri kendi deposunda)
   oyun_gunluk_beyin_egzersizi_programi:
     git:
@@ -75,6 +75,18 @@ dependencies:
     git:
       url: https://github.com/taktemurr-ops/oyun-uzamsal-dondurme
       ref: eaf45c54079995be258a514081062a6c6cab5fdd
+  oyun_kestirme_ustasi:
+    git:
+      url: https://github.com/taktemurr-ops/oyun-kestirme-ustasi
+      ref: bff56b394298a0484a0685cf620076c5fdec780c
+  oyun_iz_surme:
+    git:
+      url: https://github.com/taktemurr-ops/oyun-iz-surme
+      ref: e261564da78a3f1509b85761aef6c016dd0cee04
+  oyun_ok_yonu:
+    git:
+      url: https://github.com/taktemurr-ops/oyun-ok-yonu
+      ref: 07094aeb72fac16a191ca20350d74aa09d5ffe61
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^2.6.1
@@ -88,11 +100,11 @@ dependency_overrides:
   studio_core:
     git:
       url: https://github.com/taktemurr-ops/studio-core
-      ref: 5eedc912719ebc306e3cd9e5e9b251efe4399105
+      ref: af82ca8814c5123a77f7b20744e18adcb47c874e
   zihin_motoru:
     git:
       url: https://github.com/taktemurr-ops/zihin-motoru
-      ref: 9f6815e61d7324aef32a49af9b307cbf5633f454
+      ref: c95311f0461c3eebc29cb1b817521214b20089b5
 
 dev_dependencies:
   flutter_test:

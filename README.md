@@ -1,6 +1,6 @@
 # Zihin Antrenmanı · Brain Training (merkez-zihin-antrenmani)
 
-Zihin ailesinin **merkez uygulaması**: 15 kısa egzersizi (hafıza, dikkat ve hız, mantık ve uzam) tek mağaza uygulamasında toplar. Her egzersiz kendi deposundadır; ortak motor [zihin-motoru](https://github.com/taktemurr-ops/zihin-motoru), ortak çekirdek [studio-core](https://github.com/taktemurr-ops/studio-core). Egzersizler eğlence ve alıştırma içindir; tıbbi iddia taşımaz.
+Zihin ailesinin **merkez uygulaması**: 18 kısa egzersizi (hafıza, dikkat ve hız, mantık ve uzam) tek mağaza uygulamasında toplar. Her egzersiz kendi deposundadır; ortak motor [zihin-motoru](https://github.com/taktemurr-ops/zihin-motoru), ortak çekirdek [studio-core](https://github.com/taktemurr-ops/studio-core). Egzersizler eğlence ve alıştırma içindir; tıbbi iddia taşımaz.
 
 | Egzersiz | Depo |
 |---|---|
@@ -19,5 +19,8 @@ Zihin ailesinin **merkez uygulaması**: 15 kısa egzersizi (hafıza, dikkat ve h
 | Görsel Arama | [oyun-gorsel-arama](https://github.com/taktemurr-ops/oyun-gorsel-arama) |
 | Örüntü Tamamla | [oyun-oruntu-tamamlama](https://github.com/taktemurr-ops/oyun-oruntu-tamamlama) |
 | Uzamsal Döndürme | [oyun-uzamsal-dondurme](https://github.com/taktemurr-ops/oyun-uzamsal-dondurme) |
+| Kestirme Ustası | [oyun-kestirme-ustasi](https://github.com/taktemurr-ops/oyun-kestirme-ustasi) |
+| İz Sürme | [oyun-iz-surme](https://github.com/taktemurr-ops/oyun-iz-surme) |
+| Ok Yönü | [oyun-ok-yonu](https://github.com/taktemurr-ops/oyun-ok-yonu) |
 
 Test APK: https://github.com/taktemurr-ops/merkez-zihin-antrenmani/releases/download/test/merkez-zihin-antrenmani.apk

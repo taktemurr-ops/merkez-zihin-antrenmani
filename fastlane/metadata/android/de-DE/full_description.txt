@@ -1,9 +1,9 @@
-Gehirntraining vereint 15 kurze Gehirnübungen in einer App mit eigenem Design: Gedächtnis, Aufmerksamkeit und Tempo, Logik und Raumdenken. Jede Übung hat eigenen Fortschritt, Missionen und Erfolge; das Tägliche Gehirnprogramm bringt jeden Tag drei andere Übungen. Die Übungen dienen Spaß und Training und erheben keine medizinischen Ansprüche.
+Gehirntraining vereint 18 kurze Gehirnübungen in einer App mit eigenem Design: Gedächtnis, Aufmerksamkeit und Tempo, Logik und Raumdenken. Jede Übung hat eigenen Fortschritt, Missionen und Erfolge; das Tägliche Gehirnprogramm bringt jeden Tag drei andere Übungen. Die Übungen dienen Spaß und Training und erheben keine medizinischen Ansprüche.
 
 • Jeden Tag: Tägliches Gehirnprogramm
 • Gedächtnis: Farbfolge, Bildgedächtnis, N-Back, Gesichter und Namen, Zahlenspanne, Wortgedächtnis
-• Aufmerksamkeit und Tempo: Farbe oder Wort, Zahlentafel, Reaktion und Fokus, Kopfrechnen, Doppelaufgabe, Visuelle Suche
-• Logik und Raum: Muster ergänzen, Räumliche Drehung
+• Aufmerksamkeit und Tempo: Farbe oder Wort, Zahlentafel, Reaktion und Fokus, Kopfrechnen, Doppelaufgabe, Visuelle Suche, Spurensucher, Pfeilfokus
+• Logik und Raum: Muster ergänzen, Räumliche Drehung, Schätzmeister
 
 Highlights
 • 100.000 Level pro Übung; Folgenlänge, Rastergröße und Tempo steigen schrittweise, jedes Level wird geprüft.

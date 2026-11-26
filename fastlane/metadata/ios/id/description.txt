@@ -1,9 +1,9 @@
-Latihan Otak menghimpun 12 latihan otak singkat dalam satu aplikasi dengan desain orisinal: memori, fokus dan kecepatan, logika dan ruang. Tiap latihan punya kemajuan, misi, dan pencapaian sendiri; Rencana Otak Harian menyajikan tiga latihan berbeda setiap hari. Latihan ini untuk hiburan dan berlatih, tanpa klaim medis.
+Latihan Otak menghimpun 18 latihan otak singkat dalam satu aplikasi dengan desain orisinal: memori, fokus dan kecepatan, logika dan ruang. Tiap latihan punya kemajuan, misi, dan pencapaian sendiri; Rencana Otak Harian menyajikan tiga latihan berbeda setiap hari. Latihan ini untuk hiburan dan berlatih, tanpa klaim medis.
 
 • Setiap hari: Rencana Otak Harian
-• Memori: Urutan Warna, Memori Visual, N-Mundur, Wajah dan Nama
-• Fokus dan kecepatan: Warna atau Kata, Tabel Angka, Refleks dan Fokus, Hitung Cepat, Tugas Ganda
-• Logika dan ruang: Lengkapi Pola, Rotasi Ruang
+• Memori: Urutan Warna, Memori Visual, N-Mundur, Wajah dan Nama, Deret Angka, Ingatan Kata
+• Fokus dan kecepatan: Warna atau Kata, Tabel Angka, Refleks dan Fokus, Hitung Cepat, Tugas Ganda, Pencarian Visual, Penjejak Jalur, Fokus Panah
+• Logika dan ruang: Lengkapi Pola, Rotasi Ruang, Jago Menaksir
 
 Sorotan
 • 100.000 level per latihan; panjang, ukuran kisi, dan tempo naik bertahap, setiap level diperiksa.

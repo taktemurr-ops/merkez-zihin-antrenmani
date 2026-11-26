@@ -1,9 +1,9 @@
-Breintraining bundelt 12 korte breinoefeningen in één app met eigen ontwerp: geheugen, aandacht en snelheid, logica en ruimtelijk inzicht. Elke oefening heeft eigen voortgang, missies en prestaties; het Dagelijks Breinplan geeft elke dag drie andere oefeningen. De oefeningen zijn voor plezier en oefening, zonder medische claims.
+Breintraining bundelt 18 korte breinoefeningen in één app met eigen ontwerp: geheugen, aandacht en snelheid, logica en ruimtelijk inzicht. Elke oefening heeft eigen voortgang, missies en prestaties; het Dagelijks Breinplan geeft elke dag drie andere oefeningen. De oefeningen zijn voor plezier en oefening, zonder medische claims.
 
 • Elke dag: Dagelijks Breinplan
-• Geheugen: Kleurenreeks, Visueel Geheugen, N-Terug, Gezichten en Namen
-• Aandacht en snelheid: Kleur of Woord, Getallentabel, Reflex en Focus, Snel Rekenen, Dubbele Taak
-• Logica en ruimte: Patroon Afmaken, Ruimtelijk Draaien
+• Geheugen: Kleurenreeks, Visueel Geheugen, N-Terug, Gezichten en Namen, Cijferreeks, Woordgeheugen
+• Aandacht en snelheid: Kleur of Woord, Getallentabel, Reflex en Focus, Snel Rekenen, Dubbele Taak, Visueel Zoeken, Spoorzoeker, Pijlfocus
+• Logica en ruimte: Patroon Afmaken, Ruimtelijk Draaien, Meester in Schatten
 
 Hoogtepunten
 • 100.000 levels per oefening; lengte, rooster en tempo groeien stap voor stap, elk level wordt gecontroleerd.

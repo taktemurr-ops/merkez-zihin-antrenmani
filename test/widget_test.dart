@@ -20,6 +20,9 @@ void main() {
       'oyun-gorsel-arama',
       'oyun-oruntu-tamamlama',
       'oyun-uzamsal-dondurme',
+      'oyun-kestirme-ustasi',
+      'oyun-iz-surme',
+      'oyun-ok-yonu',
     ]);
     final all = hubConfig.allGames.map((g) => g.gameId).toList();
     expect(all.length, ids.length + 0);
