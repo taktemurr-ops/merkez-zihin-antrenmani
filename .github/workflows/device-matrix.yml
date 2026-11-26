@@ -63,6 +63,7 @@ jobs:
           retention-days: 3
 
   android:
+    name: android ${{ matrix.name }}
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 75

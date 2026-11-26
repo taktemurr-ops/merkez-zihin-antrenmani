@@ -36,6 +36,8 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+      - name: Fonts with real metrics (Arabic, emoji)
+        run: sudo apt-get install -yq fonts-noto-core fonts-noto-color-emoji > /dev/null || (sudo apt-get update -q && sudo apt-get install -yq fonts-noto-core fonts-noto-color-emoji > /dev/null)
       - run: flutter pub get
       - name: Screen size, large text and RTL layout tests
         run: |

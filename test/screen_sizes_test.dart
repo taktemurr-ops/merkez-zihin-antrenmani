@@ -52,8 +52,9 @@ const _gameScreens = kScreens;
 bool _skip(Size s) => s.width > s.height && s.shortestSide < 600;
 
 void main() {
-  setUpAll(() {
+  setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
+    await loadRealFonts();
     for (final ch in ['xyz.luan/audioplayers', 'xyz.luan/audioplayers.global']) {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(MethodChannel(ch), (call) async => null);

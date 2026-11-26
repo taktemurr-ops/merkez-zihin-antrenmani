@@ -1,10 +1,12 @@
 // Ekran boyutu denetimi (ortak yardımcı): taşma (RenderFlex overflow vb.),
 // kesilen metin ve ekran dışında kalıp erişilemeyen düğmeleri toplar.
 // screen_sizes_test.dart ve cihaz duman testi (integration_test) kullanır.
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Denenen mantıksal ekran boyutları (dikey; yatay için en/boy yer değiştirir).
@@ -69,10 +71,16 @@ class ErrorTrap {
     FlutterError.onError = (d) {
       final s = d.exceptionAsString();
       var first = s.split('\n').firstWhere((l) => l.trim().isNotEmpty, orElse: () => s);
-      final where = d.informationCollector == null
-          ? ''
-          : d.informationCollector!().map((e) => e.toString()).where((l) => l.contains('file:///') || l.contains('creator')).take(1).join(' ');
-      if (where.isNotEmpty) first = '$first @ ${where.length > 200 ? where.substring(0, 200) : where}';
+      // Kaynağı bul: hatayı doğuran widget'ın dosyası (SDK dışı) ve üst zinciri.
+      final full = d.toString();
+      final files = RegExp(r'file:///\S+?\.dart:\d+:\d+').allMatches(full).map((m) => m.group(0)!)
+          .where((f) => !f.contains('/packages/flutter/')).toList();
+      final creator = RegExp(r'creator: ([^\n]+)').firstMatch(full)?.group(1);
+      final where = [
+        if (files.isNotEmpty) files.first.replaceFirst(RegExp(r'^file:///home/runner/(work/[^/]+/[^/]+/|\.pub-cache/(git|hosted/[^/]+)/)'), ''),
+        if (creator != null) creator.split(' ← ').take(4).join('<'),
+      ].join(' ');
+      if (where.isNotEmpty) first = '$first @ ${where.length > 220 ? where.substring(0, 220) : where}';
       errors.add(first);
     };
   }
@@ -160,6 +168,39 @@ void checkLayout(WidgetTester tester, LayoutIssues issues, ErrorTrap trap, Strin
 }
 
 String _short(String s) => s.length > 40 ? '${s.substring(0, math.min(40, s.length))}…' : s;
+
+/// Gerçek cihazdaki yazı ölçüleri için Roboto (Flutter SDK'daki
+/// material_fonts) ve varsa sistemdeki Noto Arapça/emoji yazı tiplerini
+/// yükler; yoksa test yazı tipi (her harf 1 em) taşmaları abartır.
+Future<void> loadRealFonts() async {
+  Future<void> load(String family, Iterable<File> files) async {
+    final l = FontLoader(family);
+    var n = 0;
+    for (final f in files) {
+      if (!f.existsSync()) continue;
+      final bytes = f.readAsBytesSync();
+      l.addFont(Future.value(ByteData.sublistView(bytes)));
+      n++;
+    }
+    if (n > 0) await l.load();
+  }
+
+  try {
+    final artifacts = File(Platform.resolvedExecutable).parent.parent.parent;
+    final mf = Directory('${artifacts.path}/material_fonts');
+    if (mf.existsSync()) {
+      final all = mf.listSync().whereType<File>().toList();
+      await load('Roboto', all.where((f) => f.path.contains('Roboto-') && f.path.endsWith('.ttf')));
+      await load('MaterialIcons', all.where((f) => f.path.contains('MaterialIcons')));
+    }
+    const noto = '/usr/share/fonts/truetype/noto';
+    await load('Noto Naskh Arabic', [File('$noto/NotoNaskhArabic-Regular.ttf'), File('$noto/NotoNaskhArabic-Bold.ttf')]);
+    await load('Noto Color Emoji', [File('$noto/NotoColorEmoji.ttf')]);
+  } catch (e) {
+    // ignore: avoid_print
+    print('yazı tipi yüklenemedi: $e');
+  }
+}
 
 /// Her denemede ağacın sıfırdan kurulması için (taşma uyarısı her boyutta
 /// yeniden bildirilir): kökteki durum (ör. ProviderScope) korunur.
