@@ -117,6 +117,16 @@ def android():
 
 # --------------------------------------------------------------------------- Windows
 def windows():
+    cm = "windows/CMakeLists.txt"
+    if os.path.exists(cm):
+        s = read(cm)
+        # Visual Studio 2026 (MSVC 14.5x) <experimental/coroutine>'ı hata sayıyor;
+        # /await kullanan eski eklentiler (flutter_local_notifications_windows,
+        # local_auth_windows) için uyarı susturucu.
+        flag = "_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS"
+        if flag not in s:
+            s = re.sub(r"(project\([^)]*\)\n)", r"\1add_compile_definitions(%s)\n" % flag, s, count=1)
+        write(cm, s)
     main = "windows/runner/main.cpp"
     if os.path.exists(main):
         s = read(main)
