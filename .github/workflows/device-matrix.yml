@@ -43,6 +43,14 @@ jobs:
           flutter pub get
           dart run flutter_launcher_icons
           dart run flutter_native_splash:create
+      # whisper_ggml (otomatik altyazı) yerel kodu belirli bir NDK sürümü ister.
+      - name: Android NDK (if a plugin needs it)
+        run: |
+          if grep -q whisper_ggml pubspec.yaml; then
+            SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+            yes | "$SDKM" --licenses > /dev/null || true
+            "$SDKM" --install "ndk;29.0.13113456" > /dev/null
+          fi
       - name: Build release APK
         run: flutter build apk --release || (sleep 90 && flutter build apk --release) || (sleep 180 && flutter build apk --release)
       - name: Build on-device test APK (app hubs)
@@ -76,7 +84,7 @@ jobs:
           - { name: api26-en-kucuk-320x568, api: 26, profile: pixel_3a, wm: "640x1136@320" }
           - { name: api29-pixel_3a, api: 29, profile: pixel_3a, wm: "" }
           - { name: api31-buyuk-telefon-pixel_7_pro, api: 31, profile: pixel_7_pro, wm: "" }
-          - { name: api33-katlanabilir-pixel_fold, api: 33, profile: pixel_fold, wm: "" }
+          - { name: api34-katlanabilir-pixel_fold, api: 34, profile: pixel_fold, wm: "" }
           - { name: api34-pixel_7, api: 34, profile: pixel_7, wm: "" }
           - { name: api34-tablet-pixel_tablet, api: 34, profile: pixel_tablet, wm: "" }
           - { name: api35-pixel_7, api: 35, profile: pixel_7, wm: "" }
@@ -163,10 +171,23 @@ jobs:
           flutter pub get
           dart run flutter_launcher_icons
           dart run flutter_native_splash:create
+      # ffmpeg_kit_flutter_new_min'in simülatör (arm64) dilimi yok: bu merkezde
+      # simülatör derlemesi yapılamaz; iOS cihaz derlemesi ios.yml'de denetlenir.
+      - name: Simulator support check
+        id: simok
+        run: |
+          if grep -q ffmpeg_kit_flutter_new_min pubspec.yaml; then
+            echo "::notice::ffmpeg_kit (simülatör arm64 dilimi yok): iOS simülatör testi atlandı"
+            echo "ok=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+          fi
       - name: Build for simulator
+        if: steps.simok.outputs.ok == '1'
         run: flutter build ios --simulator --debug
       # En küçük desteklenen iPhone (SE 3. nesil; yoksa 16e), büyük iPhone, iPad.
       - name: Run on iPhone SE, large iPhone and iPad simulators
+        if: steps.simok.outputs.ok == '1'
         run: bash tool/smoke_ios.sh "iPhone SE~iPhone 16e~iPhone 1|iPhone 1[0-9] Pro Max~iPhone 1[0-9] Plus~iPhone 1|iPad Pro 13~iPad Air 13~iPad"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
