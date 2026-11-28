@@ -1,0 +1,78 @@
+# Galaxy Store ve Amazon Appstore'a yükleme: son başarılı CI derlemesinin
+# o mağazaya ait paketi (ci.yml > stores işi, yapıt merkez-zihin-antrenmani-<mağaza>).
+# Gizli değişkenler (Settings > Secrets and variables > Actions):
+#   Galaxy Store: SAMSUNG_SERVICE_ACCOUNT_ID, SAMSUNG_PRIVATE_KEY,
+#     SAMSUNG_CONTENT_ID_MERKEZ_ZIHIN_ANTRENMANI (ya da SAMSUNG_CONTENT_ID)
+#   Amazon: AMAZON_CLIENT_ID, AMAZON_CLIENT_SECRET,
+#     AMAZON_APP_ID_MERKEZ_ZIHIN_ANTRENMANI (ya da AMAZON_APP_ID)
+# Xiaomi, OPPO, vivo, HONOR ve ONE store'un CI'dan kullanılabilir yükleme
+# API'si yoktur: paketler test sürümünde/CI yapıtında, yükleme konsoldan elle.
+# Gizli değişkenler yoksa iş temiz biçimde atlanır.
+name: android-stores
+
+on:
+  workflow_dispatch:
+    inputs:
+      store:
+        description: "Mağaza"
+        type: choice
+        options: [samsung, amazon]
+        default: samsung
+      submit:
+        description: "Yüklemeden sonra incelemeye gönder"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SAMSUNG_SERVICE_ACCOUNT_ID: ${{ secrets.SAMSUNG_SERVICE_ACCOUNT_ID }}
+      SAMSUNG_PRIVATE_KEY: ${{ secrets.SAMSUNG_PRIVATE_KEY }}
+      SAMSUNG_CONTENT_ID: ${{ secrets.SAMSUNG_CONTENT_ID_MERKEZ_ZIHIN_ANTRENMANI || secrets.SAMSUNG_CONTENT_ID }}
+      AMAZON_CLIENT_ID: ${{ secrets.AMAZON_CLIENT_ID }}
+      AMAZON_CLIENT_SECRET: ${{ secrets.AMAZON_CLIENT_SECRET }}
+      AMAZON_APP_ID: ${{ secrets.AMAZON_APP_ID_MERKEZ_ZIHIN_ANTRENMANI || secrets.AMAZON_APP_ID }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Gizli değişkenler tanımlı mı
+        id: key
+        run: |
+          if [ "${{ inputs.store }}" = "samsung" ]; then
+            N="SAMSUNG_SERVICE_ACCOUNT_ID / SAMSUNG_PRIVATE_KEY / SAMSUNG_CONTENT_ID_MERKEZ_ZIHIN_ANTRENMANI"
+            OK=$([ -n "$SAMSUNG_SERVICE_ACCOUNT_ID" ] && [ -n "$SAMSUNG_PRIVATE_KEY" ] && [ -n "$SAMSUNG_CONTENT_ID" ] && echo 1 || echo 0)
+          else
+            N="AMAZON_CLIENT_ID / AMAZON_CLIENT_SECRET / AMAZON_APP_ID_MERKEZ_ZIHIN_ANTRENMANI"
+            OK=$([ -n "$AMAZON_CLIENT_ID" ] && [ -n "$AMAZON_CLIENT_SECRET" ] && [ -n "$AMAZON_APP_ID" ] && echo 1 || echo 0)
+          fi
+          if [ "$OK" != "1" ]; then echo "::notice::$N yok: ${{ inputs.store }} yüklemesi atlandı."; fi
+          echo "ok=$OK" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        if: steps.key.outputs.ok == '1'
+        with:
+          python-version: "3.12"
+      - name: Son başarılı CI derlemesinin paketi
+        if: steps.key.outputs.ok == '1'
+        run: |
+          RUN=$(gh run list -R ${{ github.repository }} -w ci.yml -b main -s success -L 1 --json databaseId -q '.[0].databaseId')
+          gh run download "$RUN" -R ${{ github.repository }} -n merkez-zihin-antrenmani-${{ inputs.store }} -D pkg
+          ls -lR pkg
+      - name: Yükle
+        if: steps.key.outputs.ok == '1'
+        run: |
+          pip install "pyjwt[crypto]==2.10.1"
+          S="${{ inputs.store }}"
+          if [ "$S" = "samsung" ]; then
+            ARGS="--file pkg/out/merkez-zihin-antrenmani-samsung.apk"
+          else
+            # Fire OS: 64 bit (yeni Fire TV/tablet) ve 32 bit (eski Fire TV Stick) APK'ları.
+            ARGS="--file pkg/out/merkez-zihin-antrenmani-amazon.apk --file pkg/out/merkez-zihin-antrenmani-amazon-armeabi-v7a.apk"
+          fi
+          if [ "${{ inputs.submit }}" = "true" ]; then ARGS="$ARGS --submit"; fi
+          python tool/android_store_publish.py "$S" $ARGS

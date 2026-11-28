@@ -17,10 +17,19 @@ Yaptıkları (tabloya göre):
 * config_secret: mağaza yapılandırma dosyası (ör. agconnect-services.json)
   gizli değişkenden yazılır; yoksa derleme test kipinde yine başarılı olur.
 * GITHUB_ENV: STORE_ID, STORE_SUFFIX (çıktı dosya adı eki), STORE_DEFS
-  (--dart-define=STORE=... ve tablodaki reklam kimliği değişkenleri).
+  (--dart-define=STORE=... ve tablodaki reklam kimliği / extra_defines
+  değişkenleri).
+* tv: Android TV / Fire TV (leanback başlatıcısı, 320x180 afiş, dokunmatik
+  isteğe bağlı, `studio/device` algılama kanalı); yalnızca `tv_hubs`.
+* Mağazaya özgü kancalar (HOOKS): huawei (HMS R8, app id), samsung (Samsung
+  IAP SDK AAR'ı SAMSUNG_IAP_AAR_URL'den), onestore (<queries>, R8).
+
+`python tool/store_flavor.py google --tv-only` Google Play derlemesinde
+yalnızca televizyon yamasını uygular (Android TV, Play).
 
 Google Play derlemesi bu betiği çalıştırmaz (değişiklik yok).
 """
+import hashlib
 import json
 import os
 import re
@@ -189,6 +198,10 @@ def store_config(spec):
     if not raw:
         print("%s tanımlı değil: %s test kipinde derleniyor (yapılandırma dosyası yok)." % (cfg["env"], spec["name"]))
         return None
+    if cfg.get("assets_only"):
+        # JSON olmayan dosya (ör. Amazon AppstoreAuthenticationKey.pem): yalnızca assets.
+        write(os.path.join("android/app/src/main/assets", cfg["file"]), raw + "\n")
+        return {}
     try:
         data = json.loads(raw)
     except ValueError:
@@ -235,7 +248,228 @@ def patch_huawei(spec, cfg):
     write(man, s)
 
 
-HOOKS = {"huawei": patch_huawei}
+# ---- Samsung Galaxy Store ------------------------------------------------------
+
+SAMSUNG_GRADLE = """
+// Samsung IAP SDK (tool/store_flavor.py; SAMSUNG_IAP_AAR_URL gizli değişkeninden).
+dependencies {
+    implementation(files("libs/samsung-iap.aar"))
+}
+"""
+
+
+def patch_samsung(spec, cfg):
+    """Samsung IAP SDK AAR'ı (Samsung hesabıyla indirilir, herkese açık Maven'de
+    yok) SAMSUNG_IAP_AAR_URL'den indirilir; yoksa studio_samsung "stub"
+    kaynaklarıyla derlenir (satın alma kapalı, AdMob açık)."""
+    url = os.environ.get("SAMSUNG_IAP_AAR_URL", "").strip()
+    if not url:
+        print("SAMSUNG_IAP_AAR_URL tanımlı değil: Galaxy Store derlemesi Samsung IAP olmadan (yalnızca reklam).")
+        return
+    if not url.startswith("https://"):
+        sys.exit("SAMSUNG_IAP_AAR_URL https:// ile başlamalı")
+    dest = os.path.abspath("android/app/libs/samsung-iap.aar")
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    with urllib.request.urlopen(url, timeout=60) as r:
+        data = r.read()
+    want = os.environ.get("SAMSUNG_IAP_AAR_SHA256", "").strip().lower()
+    got = hashlib.sha256(data).hexdigest()
+    if want and want != got:
+        sys.exit("Samsung IAP AAR SHA-256 uyuşmuyor (%s)" % got)
+    if not data.startswith(b"PK"):
+        sys.exit("SAMSUNG_IAP_AAR_URL bir AAR (zip) döndürmedi")
+    with open(dest, "wb") as f:
+        f.write(data)
+    gradle = "android/app/build.gradle.kts"
+    s = read(gradle)
+    if "samsung-iap.aar" not in s:
+        write(gradle, s + SAMSUNG_GRADLE)
+    env = os.environ.get("GITHUB_ENV")
+    if env:
+        with open(env, "a", encoding="utf-8") as f:
+            f.write("SAMSUNG_IAP_AAR=%s\n" % dest)
+    os.environ["SAMSUNG_IAP_AAR"] = dest
+    print("Samsung IAP SDK eklendi (sha256 %s)" % got[:12])
+
+
+# ---- ONE store -------------------------------------------------------------------
+
+ONESTORE_QUERIES = """    <queries>
+        <intent>
+            <action android:name="com.onestore.ipc.iap.IapService.ACTION" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="onestore" />
+        </intent>
+    </queries>
+"""
+
+ONESTORE_RULES = """
+# ONE store IAP / lisans (tool/store_flavor.py; ONE store'un önerdiği kurallar).
+-keep class com.gaa.sdk.base.** { *; }
+-keep class com.gaa.sdk.auth.** { *; }
+-keep class com.gaa.sdk.iap.** { *; }
+-keep class com.onestore.extern.licensing.** { *; }
+-dontwarn com.gaa.sdk.**
+"""
+
+
+def patch_onestore(spec, cfg):
+    man = "android/app/src/main/AndroidManifest.xml"
+    s = read(man)
+    if "com.onestore.ipc.iap.IapService.ACTION" not in s:
+        s = s.replace("<application", ONESTORE_QUERIES + "    <application", 1)
+        write(man, s)
+    rules = "android/app/proguard-rules.pro"
+    old = read(rules) if os.path.exists(rules) else ""
+    if "com.gaa.sdk.iap" not in old:
+        write(rules, old + ONESTORE_RULES)
+
+
+# ---- Amazon Appstore ----------------------------------------------------------------
+
+
+def patch_amazon(spec, cfg):
+    # Fire OS: Google Play hizmetleri yok; AdMob uygulama kimliği meta verisi
+    # zararsız kalır (AdMob hiç başlatılmaz). Fire TV kumandası için dokunmatik
+    # zorunlu değildir (patch_tv). Ortak anahtar (AppstoreAuthenticationKey.pem)
+    # config_secret ile assets'e yazılır.
+    pass
+
+
+# ---- Televizyon (Android TV / Google TV, Fire TV) -----------------------------------
+
+TV_KT = """
+    // Televizyon algılama (tool/store_flavor.py): studio_core TvMode.
+    private fun studioIsTv(): Boolean {
+        val ui = getSystemService(android.content.Context.UI_MODE_SERVICE) as android.app.UiModeManager
+        val pm = packageManager
+        return ui.currentModeType == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION ||
+            pm.hasSystemFeature("android.software.leanback") ||
+            pm.hasSystemFeature("amazon.hardware.fire_tv")
+    }
+"""
+
+TV_REGISTER = """io.flutter.plugin.common.MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "studio/device")
+            .setMethodCallHandler { call, result ->
+                if (call.method == "isTv") result.success(studioIsTv()) else result.notImplemented()
+            }"""
+
+
+def _hub_id():
+    s = read("pubspec.yaml")
+    m = re.search(r"^name:\s*(\S+)", s, re.M)
+    return m.group(1).replace("_", "-") if m else ""
+
+
+def _tv_banner():
+    """320x180 leanback afişi: simge + uygulama adı (tool/patch_platforms.py APP_NAME)."""
+    out = "android/app/src/main/res/drawable-xhdpi/tv_banner.png"
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    name = ""
+    if os.path.exists("tool/patch_platforms.py"):
+        m = re.search(r'^APP_NAME\s*=\s*"([^"]+)"', read("tool/patch_platforms.py"), re.M)
+        name = m.group(1) if m else ""
+    bg = "#283593"
+    m = re.search(r'adaptive_icon_background:\s*"(#[0-9A-Fa-f]{6})"', read("pubspec.yaml"))
+    if m:
+        bg = m.group(1)
+    icon = "assets/branding/icon.png"
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError:
+        Image = None
+    if Image is None:
+        if not os.path.exists(icon):
+            sys.exit("TV afişi için Pillow ya da %s gerekli" % icon)
+        with open(icon, "rb") as f, open(out, "wb") as g:
+            g.write(f.read())
+        return
+    img = Image.new("RGB", (320, 180), bg)
+    if os.path.exists(icon):
+        ic = Image.open(icon).convert("RGBA").resize((120, 120))
+        img.paste(ic, (20, 30), ic)
+    d = ImageDraw.Draw(img)
+    try:
+        font = ImageFont.load_default(size=26)
+    except TypeError:
+        font = ImageFont.load_default()
+    words, lines, cur = name.split(), [], ""
+    for w in words:
+        t = (cur + " " + w).strip()
+        if d.textlength(t, font=font) > 160 and cur:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = t
+    if cur:
+        lines.append(cur)
+    y = 90 - 16 * len(lines)
+    for ln in lines[:3]:
+        d.text((150, y), ln, fill="white", font=font)
+        y += 32
+    img.save(out)
+
+
+def patch_tv(table, spec):
+    """Leanback başlatıcısı, afiş, dokunmatik isteğe bağlı ve TV algılama
+    kanalı: yalnızca stores.json `tv_hubs` merkezlerinde ve `tv: true`
+    mağazalarında (Google Play -> Android TV, Amazon -> Fire TV)."""
+    hub = _hub_id()
+    if not spec.get("tv") or hub not in table.get("tv_hubs", []):
+        return False
+    man = "android/app/src/main/AndroidManifest.xml"
+    s = read(man)
+    for feat in ("android.software.leanback", "android.hardware.touchscreen", "android.hardware.faketouch"):
+        if 'android:name="%s"' % feat not in s:
+            s = s.replace("<application", '<uses-feature android:name="%s" android:required="false"/>\n    <application' % feat, 1)
+    if "android:banner" not in s:
+        s = s.replace("<application", '<application android:banner="@drawable/tv_banner"', 1)
+    if "LEANBACK_LAUNCHER" not in s:
+        s, n = re.subn(
+            r'(<category android:name="android.intent.category.LAUNCHER"\s*/>)',
+            r'\1\n                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>',
+            s,
+            count=1,
+        )
+        if n == 0:
+            sys.exit("AndroidManifest.xml: LAUNCHER kategorisi bulunamadı")
+    write(man, s)
+    _tv_banner()
+    for d, _, files in os.walk("android/app/src/main"):
+        for f in files:
+            if f != "MainActivity.kt":
+                continue
+            p = os.path.join(d, f)
+            k = read(p)
+            if "studio/device" in k:
+                continue
+            if "configureFlutterEngine" in k:
+                k = k.replace(
+                    "super.configureFlutterEngine(flutterEngine)",
+                    "super.configureFlutterEngine(flutterEngine)\n        " + TV_REGISTER,
+                    1,
+                )
+                k = k.rstrip()
+                assert k.endswith("}")
+                k = k[:-1] + TV_KT + "}\n"
+            else:
+                m = re.search(r"class MainActivity\s*:\s*(\w+)\(\)\s*(\{\s*\})?", k)
+                if not m:
+                    sys.exit("MainActivity.kt tanınmadı")
+                body = (
+                    "class MainActivity : %s() {\n"
+                    "    override fun configureFlutterEngine(flutterEngine: io.flutter.embedding.engine.FlutterEngine) {\n"
+                    "        super.configureFlutterEngine(flutterEngine)\n        %s\n    }\n%s}\n"
+                ) % (m.group(1), TV_REGISTER, TV_KT)
+                k = k[: m.start()] + body + k[m.end():]
+            write(p, k)
+    print("Televizyon: leanback başlatıcısı, afiş ve algılama kanalı eklendi (%s)" % hub)
+    return True
+
+
+HOOKS = {"huawei": patch_huawei, "samsung": patch_samsung, "onestore": patch_onestore, "amazon": patch_amazon}
 
 
 def main():
@@ -250,6 +484,10 @@ def main():
     spec = specs[store]
     if spec.get("platform") != "android":
         sys.exit("%s bir Android mağazası değil" % store)
+    if "--tv-only" in sys.argv[2:]:
+        # Google Play derlemesi: yalnızca Android TV yaması.
+        patch_tv(table, spec)
+        return
     patch_pubspec(spec, ref)
     patch_dart(spec)
     patch_gradle_root(spec)
@@ -259,11 +497,13 @@ def main():
     cfg = store_config(spec)
     if store in HOOKS:
         HOOKS[store](spec, cfg)
+    patch_tv(table, spec)
     env = os.environ.get("GITHUB_ENV")
     if env:
         with open(env, "a", encoding="utf-8") as f:
             defs = ["--dart-define=STORE=%s" % store]
-            defs += ["--dart-define=%s=%s" % (k, os.environ[k]) for k in spec.get("ad_defines", []) if os.environ.get(k)]
+            defs += ["--dart-define=%s=%s" % (k, os.environ[k])
+                     for k in spec.get("ad_defines", []) + spec.get("extra_defines", []) if os.environ.get(k)]
             f.write("STORE_ID=%s\nSTORE_SUFFIX=%s\nSTORE_DEFS=%s\n" % (store, spec["artifact_suffix"], " ".join(defs)))
     print("%s derlemesi hazır (studio-core %s, ek '%s')" % (spec["name"], ref[:7], spec["artifact_suffix"]))
 

@@ -64,6 +64,8 @@ jobs:
         run: |
           flutter create --platforms=android,ios,web --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
           python tool/patch_platforms.py
+          # Android TV (Google Play): leanback başlatıcısı, afiş, TV algılama (yalnızca TV merkezleri).
+          python tool/store_flavor.py google --tv-only
           python tool/platforms_extra.py
 
       - run: flutter pub get
@@ -245,7 +247,8 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
 
-  # Diğer Android mağazaları (Google hizmetleri olmayan cihazlar dahil).
+  # Diğer Android mağazaları: AppGallery, Galaxy Store, Xiaomi GetApps, OPPO,
+  # vivo, HONOR, Amazon Appstore (Fire tablet/TV), ONE store.
   # Mağaza özellikleri studio-core tool/stores.json tablosundan gelir
   # (tool/store_flavor.py). Yeni mağaza: matrix.store listesine ekleyin.
   # Çıktı: test sürümünde merkez-zihin-antrenmani<ek>.apk (arm64) ve <ek>-armeabi-v7a.apk,
@@ -256,7 +259,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        store: [huawei]
+        store: [huawei, samsung, xiaomi, oppo, vivo, honor, amazon, onestore]
     permissions:
       contents: write
     steps:
@@ -305,6 +308,14 @@ jobs:
           ADMOB_ANDROID_REWARDED: ${{ secrets.ADMOB_ANDROID_REWARDED }}
           HUAWEI_ADS_INTERSTITIAL: ${{ secrets.HUAWEI_ADS_INTERSTITIAL }}
           HUAWEI_ADS_REWARDED: ${{ secrets.HUAWEI_ADS_REWARDED }}
+          # Galaxy Store: Samsung IAP SDK AAR'ı (Samsung hesabıyla indirilen dosyanın özel bağlantısı)
+          SAMSUNG_IAP_AAR_URL: ${{ secrets.SAMSUNG_IAP_AAR_URL }}
+          SAMSUNG_IAP_AAR_SHA256: ${{ secrets.SAMSUNG_IAP_AAR_SHA256 }}
+          SAMSUNG_IAP_TEST: ${{ vars.SAMSUNG_IAP_TEST }}
+          # Amazon Appstore ortak anahtarı (AppstoreAuthenticationKey.pem içeriği)
+          AMAZON_APPSTORE_PEM: ${{ secrets.AMAZON_APPSTORE_PEM }}
+          # ONE store lisans (ortak) anahtarı
+          ONESTORE_LICENSE_KEY: ${{ secrets.ONESTORE_LICENSE_KEY }}
         run: |
           flutter create --platforms=android,ios,web --org com.gamestudio100 --project-name merkez_zihin_antrenmani .
           python tool/patch_platforms.py
