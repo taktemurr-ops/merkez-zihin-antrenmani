@@ -56,6 +56,7 @@ jobs:
           flutter create --platforms=windows --org com.gamestudio100 --project-name $PKG .
           python tool/platforms_extra.py
           flutter pub get
+          python tool/platforms_extra.py deps
           printf 'flutter_launcher_icons:\n  image_path: "assets/branding/icon.png"\n  windows:\n    generate: true\n    icon_size: 256\n' > desktop_icons.yaml
           dart run flutter_launcher_icons -f desktop_icons.yaml
       - name: Build (release, desktop edition)
@@ -150,6 +151,7 @@ jobs:
           flutter create --platforms=macos --org com.gamestudio100 --project-name $PKG .
           python tool/platforms_extra.py
           flutter pub get
+          python tool/platforms_extra.py deps
           printf 'flutter_launcher_icons:\n  image_path: "assets/branding/icon.png"\n  macos:\n    generate: true\n' > desktop_icons.yaml
           dart run flutter_launcher_icons -f desktop_icons.yaml
       - name: Build (release, desktop edition)

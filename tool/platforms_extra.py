@@ -364,8 +364,41 @@ def pwa(build):
     print("PWA: %d core files, version %s" % (len(core), version))
 
 
+def dep_assets():
+    """Bağımlı paketlerin pubspec'te bildirip depoda tutmadığı (CI'da üretilen)
+    varlık klasörlerini boş olarak açar; yoksa Windows derlemesi durur
+    ("unable to find directory entry in pubspec.yaml")."""
+    cfg = ".dart_tool/package_config.json"
+    if not os.path.exists(cfg):
+        return
+    from urllib.parse import unquote, urlparse
+    n = 0
+    for pkg in json.loads(read(cfg)).get("packages", []):
+        uri = pkg.get("rootUri", "")
+        if not uri.startswith("file:"):
+            continue
+        path = unquote(urlparse(uri).path)
+        if re.match(r"^/[A-Za-z]:", path):
+            path = path[1:]
+        spec = os.path.join(path, "pubspec.yaml")
+        if not os.path.exists(spec):
+            continue
+        m = re.search(r"^flutter:\s*\n((?:[ \t].*\n|\s*\n)*)", read(spec), re.M)
+        if not m:
+            continue
+        for a in re.findall(r"^\s*-\s*[\"']?([^\"'\s#]+/)[\"']?\s*$", m.group(1), re.M):
+            d = os.path.join(path, a)
+            if not os.path.isdir(d):
+                os.makedirs(d, exist_ok=True)
+                n += 1
+                print("created missing asset dir:", d)
+    print("dep asset dirs created: %d" % n)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) >= 3 and sys.argv[1] == "pwa":
+    if len(sys.argv) >= 2 and sys.argv[1] == "deps":
+        dep_assets()
+    elif len(sys.argv) >= 3 and sys.argv[1] == "pwa":
         pwa(sys.argv[2])
     else:
         android()
