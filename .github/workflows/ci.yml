@@ -328,6 +328,11 @@ jobs:
           dart run flutter_launcher_icons
           dart run flutter_native_splash:create
 
+      - name: Android SDK licences (store builds)
+        run: |
+          # Eklentilerin istediği SDK/NDK paketleri derlemede kurulabilsin.
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
       - name: Android release APK + App Bundle (${{ matrix.store }})
         env:
           FB_PROJECT: ${{ secrets.FIREBASE_PROJECT_ID }}
