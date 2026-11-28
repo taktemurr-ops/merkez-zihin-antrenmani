@@ -308,6 +308,8 @@ jobs:
           ADMOB_ANDROID_REWARDED: ${{ secrets.ADMOB_ANDROID_REWARDED }}
           HUAWEI_ADS_INTERSTITIAL: ${{ secrets.HUAWEI_ADS_INTERSTITIAL }}
           HUAWEI_ADS_REWARDED: ${{ secrets.HUAWEI_ADS_REWARDED }}
+          # AppGallery IAP ortak anahtarı (satın alma imzası doğrulaması)
+          HUAWEI_IAP_PUBLIC_KEY: ${{ secrets.HUAWEI_IAP_PUBLIC_KEY }}
           # Galaxy Store: Samsung IAP SDK AAR'ı (Samsung hesabıyla indirilen dosyanın özel bağlantısı)
           SAMSUNG_IAP_AAR_URL: ${{ secrets.SAMSUNG_IAP_AAR_URL }}
           SAMSUNG_IAP_AAR_SHA256: ${{ secrets.SAMSUNG_IAP_AAR_SHA256 }}
