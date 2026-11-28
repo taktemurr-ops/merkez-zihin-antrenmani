@@ -59,9 +59,6 @@ jobs:
           printf 'flutter_launcher_icons:\n  image_path: "assets/branding/icon.png"\n  windows:\n    generate: true\n    icon_size: 256\n' > desktop_icons.yaml
           dart run flutter_launcher_icons -f desktop_icons.yaml
       - name: Build (release, desktop edition)
-        env:
-          # VS 2026: eski /await eklentileri için (bkz. tool/platforms_extra.py).
-          CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
         run: |
           flutter build windows --release --dart-define=EDITION=desktop --build-number=$((GITHUB_RUN_NUMBER + 100)) \
             || (sleep 60 && flutter build windows --release --dart-define=EDITION=desktop --build-number=$((GITHUB_RUN_NUMBER + 100)))
