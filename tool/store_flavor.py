@@ -185,8 +185,16 @@ def patch_manifest_common(spec):
     # yalnızca HTTPS kullanır (network_security_config), bizim değer kalır.
     if "xmlns:tools" not in s:
         s = s.replace("<manifest ", '<manifest xmlns:tools="http://schemas.android.com/tools" ', 1)
-    if "tools:replace" not in s:
-        s = s.replace("<application", '<application tools:replace="android:usesCleartextTraffic"', 1)
+    # Yalnızca <application> öğesine bakılır (izinlerde başka tools:replace olabilir).
+    m = re.search(r"<application\b[^>]*>", s)
+    if m and "android:usesCleartextTraffic" not in (re.search(r'tools:replace="([^"]*)"', m.group(0)) or [None, ""])[1]:
+        tag = m.group(0)
+        r = re.search(r'tools:replace="([^"]*)"', tag)
+        if r:
+            tag2 = tag.replace(r.group(0), 'tools:replace="%s,android:usesCleartextTraffic"' % r.group(1), 1)
+        else:
+            tag2 = tag.replace("<application", '<application tools:replace="android:usesCleartextTraffic"', 1)
+        s = s[: m.start()] + tag2 + s[m.end():]
     write(man, s)
 
 
