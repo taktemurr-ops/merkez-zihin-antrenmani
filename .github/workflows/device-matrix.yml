@@ -56,7 +56,7 @@ jobs:
       - name: Build on-device test APK (app hubs)
         run: |
           if [ -f integration_test/device_smoke_test.dart ]; then
-            T="-t integration_test/device_smoke_test.dart"
+            T="-t integration_test/device_smoke_test.dart --target-platform android-x64"
             flutter build apk --debug $T || (sleep 90 && flutter build apk --debug $T)
           fi
       - run: grep -hm1 'applicationId' android/app/build.gradle* | sed -E 's/.*"([^"]+)".*/\1/' > smoke-pkg.txt && cat smoke-pkg.txt

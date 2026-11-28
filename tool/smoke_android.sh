@@ -168,7 +168,7 @@ fi
 if [ -f "$ITEST_APK" ] && [ "${SMOKE_ITEST:-1}" = 1 ]; then
   echo "== cihazda araç gezintisi ($ITEST_APK)"
   T 60 adb uninstall "$PKG" > /dev/null 2>&1 || true
-  T 240 adb install -r -g "$ITEST_APK" || hang "install test apk"
+  T 480 adb install -r -g "$ITEST_APK" || hang "install test apk"
   T 30 adb logcat -c || true
   launch
   done_=0
