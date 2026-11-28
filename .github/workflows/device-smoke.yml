@@ -52,7 +52,7 @@ jobs:
       # whisper_ggml (otomatik altyazı) yerel kodu belirli bir NDK sürümü ister.
       - name: Android NDK (if a plugin needs it)
         run: |
-          if grep -q whisper_ggml pubspec.yaml; then
+          if grep -q whisper_ggml pubspec.lock; then
             SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
             yes | "$SDKM" --licenses > /dev/null || true
             "$SDKM" --install "ndk;29.0.13113456" > /dev/null
@@ -150,8 +150,8 @@ jobs:
       - name: Simulator support check
         id: simok
         run: |
-          if grep -q ffmpeg_kit_flutter_new_min pubspec.yaml; then
-            echo "::notice::ffmpeg_kit (simülatör arm64 dilimi yok): iOS simülatör testi atlandı"
+          if grep -qE "ffmpeg_kit_flutter_new_min|google_mlkit_" pubspec.lock; then
+            echo "::notice::ffmpeg_kit/google_mlkit (simülatör arm64 dilimi yok): iOS simülatör testi atlandı"
             echo "ok=0" >> "$GITHUB_OUTPUT"
           else
             echo "ok=1" >> "$GITHUB_OUTPUT"
